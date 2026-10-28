@@ -1,0 +1,68 @@
+{% extends "tracking/base.html" %}
+
+{% block title %}Delete Tennis Sessions{% endblock %}
+
+{% block content %}
+    <header class="page-intro">
+        <h1>Delete selected sessions?</h1>
+        <p class="muted">
+            This permanently removes the selected sessions
+            and their recorded set scores.
+        </p>
+    </header>
+
+    <div class="card">
+        {% if form.errors %}
+            <div role="alert">
+                {{ form.non_field_errors }}
+                {{ form.sessions.errors }}
+            </div>
+
+            <a class="button secondary"
+               href="{% url 'tracking:tennis-list' %}">
+                Back to sessions
+            </a>
+        {% else %}
+            <p>
+                You selected
+                <strong>{{ sessions|length }}</strong>
+                session{{ sessions|length|pluralize }}:
+            </p>
+
+            <ul>
+                {% for session in sessions %}
+                    <li>
+                        <strong>{{ session.focus }}</strong>
+                        — {{ session.date }}
+                        — {{ session.get_session_type_display }}
+                    </li>
+                {% endfor %}
+            </ul>
+
+            <form method="post"
+                  action="{% url 'tracking:tennis-delete' %}">
+                {% csrf_token %}
+
+                {% for session in sessions %}
+                    <input type="hidden"
+                           name="sessions"
+                           value="{{ session.pk }}">
+                {% endfor %}
+
+                <input type="hidden" name="action" value="confirm">
+
+                <div class="form-actions">
+                    <button type="submit" class="danger">
+                        Delete {{ sessions|length }}
+                        session{{ sessions|length|pluralize }}
+                    </button>
+
+                    <a class="button secondary"
+                       href="{% url 'tracking:tennis-list' %}">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        {% endif %}
+    </div>
+{% endblock %}

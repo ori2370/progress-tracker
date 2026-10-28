@@ -15,8 +15,28 @@ jobs:
     name: Django checks and tests
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:17-bookworm
+        env:
+          POSTGRES_DB: progress_tracker_test
+          POSTGRES_USER: progress_tracker
+          POSTGRES_PASSWORD: ci-only-database-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U progress_tracker -d progress_tracker_test"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+
     env:
       DJANGO_SECRET_KEY: ci-only-key-not-for-deployment
+      POSTGRES_DB: progress_tracker_test
+      POSTGRES_USER: progress_tracker
+      POSTGRES_PASSWORD: ci-only-database-password
+      POSTGRES_HOST: 127.0.0.1
+      POSTGRES_PORT: "5432"
 
     steps:
       - name: Check out repository
@@ -38,5 +58,8 @@ jobs:
       - name: Check for missing migrations
         run: python manage.py makemigrations --check --dry-run
 
+      - name: Apply database migrations
+        run: python manage.py migrate --noinput
+
       - name: Run tests
-        run: python manage.py test
+        run: python manage.py test --noinput

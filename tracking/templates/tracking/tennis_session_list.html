@@ -1,4 +1,5 @@
 {% extends "tracking/base.html" %}
+{% load static %}
 
 {% block title %}Tennis Progress{% endblock %}
 
@@ -6,32 +7,160 @@
     <header class="page-intro">
         <h1>Tennis Progress</h1>
         <p class="muted">Your lessons, practices, and matches.</p>
+
         <a class="button" href="{% url 'tracking:tennis-create' %}">
-    Log tennis session
-</a>
+            Log tennis session
+        </a>
     </header>
 
-    <div class="session-list">
-        {% for session in sessions %}
-            <article class="card">
-                <h2>{{ session.focus }}</h2>
-                <p class="muted">
-                    {{ session.date }} · {{ session.get_session_type_display }}
-                </p>
+    <div class="list-toolbar">
+        <form method="get" class="card filter-form">
+            <div>
+                <label for="session-type-filter">Session type</label>
+                <select id="session-type-filter" name="session_type">
+                    <option value="">All session types</option>
 
-                <h3>Notes</h3>
-                {{ session.notes|default:"No notes yet."|linebreaks }}
-
-                <h3>Coach feedback</h3>
-                {{ session.coach_feedback|default:"No feedback recorded."|linebreaks }}
-
-                <h3>Next practice goal</h3>
-                <p>{{ session.next_practice_goal|default:"No goal set." }}</p>
-            </article>
-        {% empty %}
-            <div class="card">
-                <p>No tennis sessions yet.</p>
+                    {% for value, label in session_types %}
+                        <option value="{{ value }}"
+                                {% if selected_type == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
             </div>
-        {% endfor %}
+
+            <div>
+                <label for="session-sort">Order</label>
+                <select id="session-sort" name="sort">
+                    <option value="newest"
+                            {% if selected_sort == "newest" %}selected{% endif %}>
+                        Newest first
+                    </option>
+                    <option value="oldest"
+                            {% if selected_sort == "oldest" %}selected{% endif %}>
+                        Oldest first
+                    </option>
+                </select>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit">Apply</button>
+
+                <a class="button secondary"
+                   href="{% url 'tracking:tennis-list' %}">
+                    Reset
+                </a>
+            </div>
+        </form>
+
+        <details class="actions-menu">
+            <summary aria-label="Session actions">
+                <span aria-hidden="true">⋯</span>
+            </summary>
+
+            <div class="actions-menu-content">
+                <button type="button" id="start-selection">
+                    Select entries to delete
+                </button>
+            </div>
+        </details>
     </div>
+
+    <form method="post"
+          action="{% url 'tracking:tennis-delete' %}"
+          id="session-selection-form">
+        {% csrf_token %}
+
+        <div id="selection-toolbar"
+             class="card selection-toolbar"
+             hidden>
+            <p id="selection-count" aria-live="polite">
+                0 selected
+            </p>
+
+            <div class="form-actions">
+                <button type="submit"
+                        class="danger"
+                        id="delete-selected"
+                        disabled>
+                    Delete selected (0)
+                </button>
+
+                <button type="button"
+                        class="button secondary"
+                        id="cancel-selection">
+                    Cancel selection
+                </button>
+            </div>
+        </div>
+
+        <div class="session-list">
+            {% for session in sessions %}
+                <article class="card">
+                    <label class="session-selector" hidden>
+                        <input type="checkbox"
+                               name="sessions"
+                               value="{{ session.pk }}"
+                               disabled>
+                        <span>
+                            Select {{ session.focus }} — {{ session.date }}
+                        </span>
+                    </label>
+
+                    <h2>{{ session.focus }}</h2>
+
+                    <p class="muted">
+                        {{ session.date }}
+                        {% if session.start_time %}
+                            at {{ session.start_time|time:"H:i" }}
+                        {% endif %}
+                        · {{ session.get_session_type_display }}
+                    </p>
+
+                    <h3>Notes</h3>
+                    {{ session.notes|default:"No notes yet."|linebreaks }}
+
+                    {% if session.session_type == "lesson" %}
+                        <h3>Coach feedback</h3>
+                        {{ session.coach_feedback|default:"No feedback recorded."|linebreaks }}
+                    {% endif %}
+
+                    {% if session.session_type == "match" %}
+                        <h3>Result</h3>
+                        <p>
+                            {{ session.get_match_result_display|default:"Not recorded" }}
+                        </p>
+
+                        {% with match_sets=session.sets.all %}
+                            {% if match_sets %}
+                                <h3>Score</h3>
+
+                                <div class="match-score">
+                                    {% for set in match_sets %}
+                                        <span class="set-score">{{ set.my_games }}{% if set.my_tiebreak_points != None %}<sup>({{ set.my_tiebreak_points }})</sup>{% endif %}–{{ set.opponent_games }}{% if set.opponent_tiebreak_points != None %}<sup>({{ set.opponent_tiebreak_points }})</sup>{% endif %}</span>
+                                    {% endfor %}
+                                </div>
+                            {% elif session.score %}
+                                <h3>Score</h3>
+                                <p>{{ session.score }}</p>
+                            {% endif %}
+                        {% endwith %}
+                    {% endif %}
+
+                    <h3>Next practice goal</h3>
+                    <p>
+                        {{ session.next_practice_goal|default:"No goal set." }}
+                    </p>
+                </article>
+            {% empty %}
+                <div class="card">
+                    <p>No tennis sessions match these filters.</p>
+                </div>
+            {% endfor %}
+        </div>
+    </form>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{% static 'tracking/tennis_list.js' %}" defer></script>
 {% endblock %}
