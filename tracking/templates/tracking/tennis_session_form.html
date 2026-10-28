@@ -1,0 +1,30 @@
+{% extends "tracking/base.html" %}
+
+{% block title %}Log Tennis Session{% endblock %}
+
+{% block content %}
+    <header class="page-intro">
+        <h1>Log tennis session</h1>
+        <p class="muted">Record your practice and what to work on next.</p>
+    </header>
+
+    <form method="post" class="card session-form">
+        {% csrf_token %}
+
+        {{ form.non_field_errors }}
+
+        {% for field in form %}
+            <div class="form-field">
+                {{ field.label_tag }}
+                {{ field }}
+                {{ field.errors }}
+            </div>
+        {% endfor %}
+
+        <div class="form-actions">
+            <button type="submit">Save session</button>
+            <a class="button secondary"
+               href="{% url 'tracking:tennis-list' %}">Cancel</a>
+        </div>
+    </form>
+{% endblock %}

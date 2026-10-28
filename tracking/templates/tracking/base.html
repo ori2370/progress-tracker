@@ -1,0 +1,28 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Progress Tracker{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'tracking/styles.css' %}">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container">
+            <p class="brand">Progress Tracker</p>
+
+            <nav aria-label="Progress sections">
+                <a href="{% url 'tracking:tennis-list' %}"
+                   aria-current="page">Tennis</a>
+                <span class="nav-placeholder">Posture · Soon</span>
+                <span class="nav-placeholder">Gym · Soon</span>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container main-content">
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

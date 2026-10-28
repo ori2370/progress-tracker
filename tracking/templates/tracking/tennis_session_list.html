@@ -1,0 +1,37 @@
+{% extends "tracking/base.html" %}
+
+{% block title %}Tennis Progress{% endblock %}
+
+{% block content %}
+    <header class="page-intro">
+        <h1>Tennis Progress</h1>
+        <p class="muted">Your lessons, practices, and matches.</p>
+        <a class="button" href="{% url 'tracking:tennis-create' %}">
+    Log tennis session
+</a>
+    </header>
+
+    <div class="session-list">
+        {% for session in sessions %}
+            <article class="card">
+                <h2>{{ session.focus }}</h2>
+                <p class="muted">
+                    {{ session.date }} · {{ session.get_session_type_display }}
+                </p>
+
+                <h3>Notes</h3>
+                {{ session.notes|default:"No notes yet."|linebreaks }}
+
+                <h3>Coach feedback</h3>
+                {{ session.coach_feedback|default:"No feedback recorded."|linebreaks }}
+
+                <h3>Next practice goal</h3>
+                <p>{{ session.next_practice_goal|default:"No goal set." }}</p>
+            </article>
+        {% empty %}
+            <div class="card">
+                <p>No tennis sessions yet.</p>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}
