@@ -63,3 +63,94 @@ jobs:
 
       - name: Run tests
         run: python manage.py test --noinput
+  
+
+  container:
+    name: Build and verify production image
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build production image
+        run: docker build -t progress-tracker:ci .
+
+      - name: Verify non-root user
+        run: |
+          test "$(docker run --rm progress-tracker:ci id -u)" != "0"
+
+      - name: Start PostgreSQL
+        run: |
+          docker network create progress-tracker-ci
+
+          docker run -d \
+            --name db \
+            --network progress-tracker-ci \
+            -e POSTGRES_DB=progress_tracker \
+            -e POSTGRES_USER=progress_tracker \
+            -e POSTGRES_PASSWORD=ci-only-database-password \
+            --health-cmd="pg_isready -U progress_tracker -d progress_tracker" \
+            --health-interval=2s \
+            --health-timeout=5s \
+            --health-retries=30 \
+            postgres:17-bookworm
+
+          for attempt in $(seq 1 60); do
+            if [ "$(docker inspect --format='{{.State.Health.Status}}' db)" = "healthy" ]; then
+              exit 0
+            fi
+            sleep 2
+          done
+
+          docker logs db
+          exit 1
+
+      - name: Start application
+        run: |
+          docker run -d \
+            --name web \
+            --network progress-tracker-ci \
+            -p 127.0.0.1:8080:8000 \
+            -e DJANGO_SECRET_KEY=ci-only-key-not-for-deployment \
+            -e DJANGO_DEBUG=false \
+            -e DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1 \
+            -e POSTGRES_DB=progress_tracker \
+            -e POSTGRES_USER=progress_tracker \
+            -e POSTGRES_PASSWORD=ci-only-database-password \
+            -e POSTGRES_HOST=db \
+            -e POSTGRES_PORT=5432 \
+            progress-tracker:ci \
+            /bin/sh -c \
+            'python manage.py migrate --noinput &&
+             python manage.py collectstatic --noinput &&
+             exec gunicorn config.wsgi:application --bind 0.0.0.0:8000 --access-logfile - --error-logfile -'
+
+      - name: Verify HTTP and static files
+        run: |
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent --output /dev/null \
+              http://127.0.0.1:8080/admin/login/; then
+              break
+            fi
+            sleep 2
+          done
+
+          curl --fail --show-error --silent --output /dev/null \
+            http://127.0.0.1:8080/admin/login/
+
+          curl --fail --show-error --silent --output /dev/null \
+            http://127.0.0.1:8080/static/tracking/styles.css
+
+      - name: Show container logs on failure
+        if: failure()
+        run: |
+          docker logs db || true
+          docker logs web || true
+
+      - name: Clean up
+        if: always()
+        run: |
+          docker rm -f web db || true
+          docker network rm progress-tracker-ci || true
