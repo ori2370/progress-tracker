@@ -1,11 +1,14 @@
 {% extends "tracking/base.html" %}
+{% load static %}
 
 {% block title %}Log Tennis Session{% endblock %}
 
 {% block content %}
     <header class="page-intro">
         <h1>Log tennis session</h1>
-        <p class="muted">Record your practice and what to work on next.</p>
+        <p class="muted">
+            Record your practice and what to work on next.
+        </p>
     </header>
 
     <form method="post" class="card session-form">
@@ -14,17 +17,81 @@
         {{ form.non_field_errors }}
 
         {% for field in form %}
-            <div class="form-field">
-                {{ field.label_tag }}
-                {{ field }}
-                {{ field.errors }}
-            </div>
+            {% if field.name != "next_practice_goal" %}
+                <div class="form-field" data-field="{{ field.name }}">
+                    {{ field.label_tag }}
+                    {{ field }}
+
+                    {% if field.help_text %}
+                        <p class="muted">{{ field.help_text }}</p>
+                    {% endif %}
+
+                    {{ field.errors }}
+                </div>
+            {% endif %}
         {% endfor %}
+
+        {{ set_formset.management_form }}
+
+        <section id="match-sets" aria-label="Set scores">
+            <h2>Set scores</h2>
+
+            {{ set_formset.non_form_errors }}
+
+            {% for set_form in set_formset %}
+                <fieldset class="set-row"
+                          data-set-index="{{ forloop.counter0 }}">
+                    <legend>Set {{ forloop.counter }}</legend>
+
+                    {{ set_form.non_field_errors }}
+
+                    <div class="score-grid">
+                        <div class="form-field">
+                            {{ set_form.my_games.label_tag }}
+                            {{ set_form.my_games }}
+                            {{ set_form.my_games.errors }}
+                        </div>
+
+                        <div class="form-field">
+                            {{ set_form.opponent_games.label_tag }}
+                            {{ set_form.opponent_games }}
+                            {{ set_form.opponent_games.errors }}
+                        </div>
+                    </div>
+
+                    <div class="score-grid tiebreak-fields">
+                        <div class="form-field">
+                            {{ set_form.my_tiebreak_points.label_tag }}
+                            {{ set_form.my_tiebreak_points }}
+                            {{ set_form.my_tiebreak_points.errors }}
+                        </div>
+
+                        <div class="form-field">
+                            {{ set_form.opponent_tiebreak_points.label_tag }}
+                            {{ set_form.opponent_tiebreak_points }}
+                            {{ set_form.opponent_tiebreak_points.errors }}
+                        </div>
+                    </div>
+                </fieldset>
+            {% endfor %}
+        </section>
+
+        <div class="form-field" data-field="next_practice_goal">
+            {{ form.next_practice_goal.label_tag }}
+            {{ form.next_practice_goal }}
+            {{ form.next_practice_goal.errors }}
+        </div>
 
         <div class="form-actions">
             <button type="submit">Save session</button>
             <a class="button secondary"
-               href="{% url 'tracking:tennis-list' %}">Cancel</a>
+               href="{% url 'tracking:tennis-list' %}">
+                Cancel
+            </a>
         </div>
     </form>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{% static 'tracking/tennis_form.js' %}" defer></script>
 {% endblock %}
