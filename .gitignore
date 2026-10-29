@@ -26,3 +26,5 @@ crash.*.log
 *.tfvars.json
 !*.tfvars.example
 !*.tfvars.json.example
+*.tfbackend
+!*.tfbackend.example
