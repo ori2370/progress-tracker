@@ -127,21 +127,57 @@ jobs:
              python manage.py collectstatic --noinput &&
              exec gunicorn config.wsgi:application --bind 0.0.0.0:8000 --access-logfile - --error-logfile -'
 
-      - name: Verify HTTP and static files
+      - name: Verify application and static files
         run: |
           for attempt in $(seq 1 30); do
-            if curl --fail --silent --output /dev/null \
-              http://127.0.0.1:8080/admin/login/; then
+            if curl --fail --silent --max-time 5 --output /dev/null \
+              http://127.0.0.1:8080/health/ready/; then
               break
             fi
             sleep 2
           done
 
-          curl --fail --show-error --silent --output /dev/null \
-            http://127.0.0.1:8080/admin/login/
+          for endpoint in \
+            /health/live/ \
+            /health/ready/ \
+            /admin/login/ \
+            /static/tracking/styles.css; do
+            curl --fail --show-error --silent --max-time 5 \
+              --output /dev/null \
+              "http://127.0.0.1:8080${endpoint}"
+          done
 
-          curl --fail --show-error --silent --output /dev/null \
-            http://127.0.0.1:8080/static/tracking/styles.css
+      - name: Verify behavior during database outage
+        run: |
+          docker stop db
+
+          curl --fail --show-error --silent --max-time 5 \
+            --output /dev/null \
+            http://127.0.0.1:8080/health/live/
+
+          status=$(curl --show-error --silent --max-time 10 \
+            --output /tmp/readiness.json \
+            --write-out "%{http_code}" \
+            http://127.0.0.1:8080/health/ready/)
+
+          test "$status" = "503"
+
+          python3 -c 'import json; assert json.load(open("/tmp/readiness.json")) == {"status": "not_ready"}'
+
+      - name: Verify recovery after database restart
+        run: |
+          docker start db
+
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent --max-time 5 --output /dev/null \
+              http://127.0.0.1:8080/health/ready/; then
+              exit 0
+            fi
+            sleep 2
+          done
+
+          echo "Application did not become ready after database restart."
+          exit 1
 
       - name: Show container logs on failure
         if: failure()
