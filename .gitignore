@@ -12,3 +12,19 @@ media/
 htmlcov/
 .vscode/
 staticfiles/
+# Terraform working files and state
+**/.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.tfstate.lock.info
+*.tfplan
+crash.log
+crash.*.log
+
+# Local Terraform variable files
+*.tfvars
+*.tfvars.json
+!*.tfvars.example
+!*.tfvars.json.example
+*.tfbackend
+!*.tfbackend.example
