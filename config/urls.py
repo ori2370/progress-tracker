@@ -17,7 +17,21 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import include, path
+
+from .health import LivenessView, ReadinessView
+
+
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path(
+        "health/live/",
+        LivenessView.as_view(),
+        name="health-live",
+    ),
+    path(
+        "health/ready/",
+        ReadinessView.as_view(),
+        name="health-ready",
+    ),
     path("", include("tracking.urls")),
 ]
