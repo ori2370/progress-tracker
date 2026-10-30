@@ -3,7 +3,7 @@ set -euo pipefail
 
 COMPOSE_VERSION="v5.6.1"
 
-dnf install -y docker curl python3
+dnf install -y docker curl-minimal python3
 
 systemctl enable --now docker
 systemctl enable --now amazon-ssm-agent
