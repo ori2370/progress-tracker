@@ -7,3 +7,8 @@ output "github_ecr_publish_role_arn" {
   description = "IAM role assumed by GitHub Actions when publishing images."
   value       = aws_iam_role.github_ecr_publish.arn
 }
+
+output "github_deploy_role_arn" {
+  description = "IAM role assumed by GitHub Actions for deployment."
+  value       = aws_iam_role.github_deploy.arn
+}
