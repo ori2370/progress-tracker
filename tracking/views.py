@@ -67,7 +67,10 @@ class TennisSessionCreateView(LoginRequiredMixin, CreateView):
     template_name = "tracking/tennis_session_form.html"
     success_url = reverse_lazy("tracking:tennis-list")
     login_url = "/admin/login/"
-
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
     def get_set_count(self):
         if self.request.method != "POST":
             return 0

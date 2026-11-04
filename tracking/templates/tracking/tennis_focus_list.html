@@ -1,0 +1,107 @@
+{% extends "tracking/base.html" %}
+
+{% block title %}Tennis Training Focus{% endblock %}
+
+{% block content %}
+    <header class="page-intro">
+        <h1>Training focus</h1>
+        <p class="muted">
+            Track your practice consistency and what you want to improve.
+        </p>
+
+        <div class="form-actions">
+            <a class="button"
+               href="{% url 'tracking:tennis-focus-create' %}">
+                New focus
+            </a>
+            <a class="button secondary"
+               href="{% url 'tracking:tennis-list' %}">
+                Session history
+            </a>
+        </div>
+    </header>
+
+    <div class="session-list">
+        {% for focus in focuses %}
+            <article class="card focus-card {% if focus.target_reached %}focus-card-complete{% endif %}">
+                <div class="focus-card-heading">
+                    <div>
+                        <h2>{{ focus.title }}</h2>
+                        <p class="muted">
+                            {{ focus.start_date|date:"j M Y" }}
+                            – {{ focus.end_date|date:"j M Y" }}
+                            · {{ focus.schedule_status }}
+                        </p>
+                    </div>
+
+                    {% if focus.target_sessions %}
+                        <div class="focus-progress {% if focus.target_reached %}focus-progress-complete{% endif %}"
+                             style="--progress: {{ focus.progress_percent }}%;"
+                             role="progressbar"
+                             aria-label="Session target progress"
+                             aria-valuemin="0"
+                             aria-valuemax="100"
+                             aria-valuenow="{{ focus.progress_percent }}"
+                             aria-valuetext="{{ focus.completed_sessions }} of {{ focus.target_sessions }} sessions">
+                            <span>{{ focus.progress_percent }}%</span>
+                        </div>
+                    {% endif %}
+                </div>
+
+                {% if focus.goal %}
+                    <h3>Goal</h3>
+                    {{ focus.goal|linebreaks }}
+                {% endif %}
+
+                <h3>Practice progress</h3>
+
+                {% if focus.target_sessions %}
+                    <p>
+                        {{ focus.completed_sessions }} of
+                        {{ focus.target_sessions }} sessions completed.
+                    </p>
+
+                    {% if focus.target_reached %}
+                        <p class="focus-complete-label">
+                            Session target reached ✓
+                        </p>
+                    {% else %}
+                        <p>
+                            {{ focus.sessions_remaining }}
+                            session{{ focus.sessions_remaining|pluralize }}
+                            remaining to reach your target.
+                        </p>
+                    {% endif %}
+                {% else %}
+                    <p>
+                        {{ focus.completed_sessions }}
+                        linked session{{ focus.completed_sessions|pluralize }} completed.
+                    </p>
+                {% endif %}
+
+                {% if focus.schedule_status == "In progress" %}
+                    {% if focus.days_remaining %}
+                        <p>
+                            {{ focus.days_remaining }}
+                            day{{ focus.days_remaining|pluralize }}
+                            until the end date.
+                        </p>
+                    {% else %}
+                        <p>Your practice period ends today.</p>
+                    {% endif %}
+                {% endif %}
+
+                <div class="form-actions">
+                    <a class="button secondary"
+                       href="{% url 'tracking:tennis-focus-update' focus.pk %}">
+                        Edit focus
+                    </a>
+                </div>
+            </article>
+        {% empty %}
+            <div class="card">
+                <p>No training focuses yet. Create your first one above.</p>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}
