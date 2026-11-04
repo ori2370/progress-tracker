@@ -1,0 +1,43 @@
+{% extends "tracking/base.html" %}
+
+{% block title %}
+    {% if object %}Edit{% else %}New{% endif %} Tennis Focus
+{% endblock %}
+
+{% block content %}
+    <header class="page-intro">
+        <h1>
+            {% if object %}Edit training focus{% else %}New training focus{% endif %}
+        </h1>
+        <p class="muted">
+            Choose what to work on and give yourself a practice period.
+        </p>
+    </header>
+
+    <form method="post" class="card session-form">
+        {% csrf_token %}
+
+        {{ form.non_field_errors }}
+
+        {% for field in form %}
+            <div class="form-field">
+                {{ field.label_tag }}
+                {{ field }}
+
+                {% if field.help_text %}
+                    <p class="muted">{{ field.help_text }}</p>
+                {% endif %}
+
+                {{ field.errors }}
+            </div>
+        {% endfor %}
+
+        <div class="form-actions">
+            <button type="submit">Save focus</button>
+            <a class="button secondary"
+               href="{% url 'tracking:tennis-focus-list' %}">
+                Cancel
+            </a>
+        </div>
+    </form>
+{% endblock %}

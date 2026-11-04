@@ -5,9 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Progress Tracker{% endblock %}</title>
-    <link rel="stylesheet" href="{% static 'tracking/styles.css' %}">
+    <link rel="stylesheet" href="{% static 'tracking/styles.css' %}?v=2">
 </head>
-{% block scripts %}{% endblock %}
 <body>
     <header class="site-header">
         <div class="container">
@@ -15,7 +14,7 @@
 
             <nav aria-label="Progress sections">
                 <a href="{% url 'tracking:tennis-list' %}"
-                   aria-current="page">Tennis</a>
+                   aria-current="location">Tennis</a>
                 <span class="nav-placeholder">Posture · Soon</span>
                 <span class="nav-placeholder">Gym · Soon</span>
             </nav>
@@ -23,7 +22,27 @@
     </header>
 
     <main class="container main-content">
+        {% with page=request.resolver_match.url_name %}
+            <nav class="section-nav" aria-label="Tennis pages">
+                <a href="{% url 'tracking:tennis-list' %}"
+                   {% if page == "tennis-list" or page == "tennis-create" or page == "tennis-delete" %}
+                       aria-current="page"
+                   {% endif %}>
+                    Sessions
+                </a>
+
+                <a href="{% url 'tracking:tennis-focus-list' %}"
+                   {% if page == "tennis-focus-list" or page == "tennis-focus-create" or page == "tennis-focus-update" %}
+                       aria-current="page"
+                   {% endif %}>
+                    Training focus
+                </a>
+            </nav>
+        {% endwith %}
+
         {% block content %}{% endblock %}
     </main>
+
+    {% block scripts %}{% endblock %}
 </body>
 </html>

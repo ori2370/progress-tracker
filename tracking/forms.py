@@ -1,8 +1,7 @@
 from django import forms
 from django.forms import BaseFormSet, formset_factory
 
-from .models import TennisSession
-
+from .models import TennisFocus, TennisSession
 
 class TennisSessionForm(forms.ModelForm):
     set_count = forms.TypedChoiceField(
@@ -28,6 +27,7 @@ class TennisSessionForm(forms.ModelForm):
             "start_time",
             "session_type",
             "focus",
+            "training_focus",
             "notes",
             "coach_feedback",
             "match_result",
@@ -36,7 +36,14 @@ class TennisSessionForm(forms.ModelForm):
         ]
         labels = {
             "focus": "Focus / session title",
+            "training_focus": "Training focus (optional)",
             "notes": "Notes / observations",
+        }
+        help_texts = {
+            "training_focus": (
+                "Link this session to a training goal. "
+                "Only sessions within its date range count toward progress."
+            ),
         }
         widgets = {
             "date": forms.DateInput(attrs={"type": "date"}),
@@ -47,6 +54,19 @@ class TennisSessionForm(forms.ModelForm):
             "notes": forms.Textarea(attrs={"rows": 3}),
             "coach_feedback": forms.Textarea(attrs={"rows": 3}),
         }
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields["training_focus"].queryset = (
+            TennisFocus.objects.none()
+        )
+
+        if user is not None and user.is_authenticated:
+            self.instance.user = user
+            self.fields["training_focus"].queryset = (
+                TennisFocus.objects.filter(user=user)
+            )
 
     def clean(self):
         cleaned_data = super().clean()
