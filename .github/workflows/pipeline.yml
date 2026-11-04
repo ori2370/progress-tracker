@@ -94,10 +94,32 @@ jobs:
 
       - name: Verify production container
         run: bash ci/test-container.sh
+
+
+  backup:
+    name: Verify encrypted backup and restore
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install encryption tool
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y age
+
+      - name: Test backup and restore
+        run: bash ci/test-backup.sh
+
+
+
+
   publish:
     name: Publish image to Amazon ECR
     runs-on: ubuntu-latest
-    needs: [test, container]
+    needs: [test, container, backup]
 
     if: >-
       github.ref == 'refs/heads/main' &&
@@ -143,7 +165,7 @@ jobs:
     deploy:
     name: Deploy application through Systems Manager
     runs-on: ubuntu-latest
-    needs: [test, container]
+    needs: [test, container, backup]
 
     if: >-
       github.event_name == 'workflow_dispatch' &&
