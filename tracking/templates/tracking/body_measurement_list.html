@@ -1,0 +1,149 @@
+{% extends "tracking/base.html" %}
+
+{% block title %}Gym Measurements{% endblock %}
+
+{% block content %}
+    <header class="page-intro">
+        <h1>Body measurements</h1>
+        <p class="muted">Your bodyweight and waist history.</p>
+
+        <a class="button"
+           href="{% url 'tracking:measurement-create' %}">
+            Log measurements
+        </a>
+    </header>
+
+    <section class="session-list" aria-label="Measurement trends">
+        <article class="card">
+            <h2>Weekly bodyweight trend</h2>
+
+            <h3>Latest 7 days</h3>
+            <p class="muted">
+                {{ current_start|date:"j M" }}
+                – {{ current_end|date:"j M Y" }}
+            </p>
+
+            {% if current_count %}
+                <p>
+                    <strong>{{ current_average|floatformat:2 }} kg</strong>
+                    average from {{ current_count }}
+                    measurement{{ current_count|pluralize }}.
+                </p>
+            {% else %}
+                <p>No bodyweight measurements in this period.</p>
+            {% endif %}
+
+            <h3>Previous 7 days</h3>
+            <p class="muted">
+                {{ previous_start|date:"j M" }}
+                – {{ previous_end|date:"j M Y" }}
+            </p>
+
+            {% if previous_count %}
+                <p>
+                    <strong>{{ previous_average|floatformat:2 }} kg</strong>
+                    average from {{ previous_count }}
+                    measurement{{ previous_count|pluralize }}.
+                </p>
+            {% else %}
+                <p>No bodyweight measurements in this period.</p>
+            {% endif %}
+
+            <h3>Change between averages</h3>
+
+            {% if weight_comparison_available %}
+                <p>
+                    <strong>{{ weight_change_display }} kg</strong>
+                    · {{ weight_direction }}
+                </p>
+            {% else %}
+                <p>
+                    Not enough data. Record bodyweight in both periods
+                    to see a comparison.
+                </p>
+            {% endif %}
+
+            <p class="muted">
+                Only recorded values count. Missing days are ignored.
+                Averages based on fewer measurements can fluctuate more.
+            </p>
+        </article>
+
+        <article class="card">
+            <h2>Waist trend</h2>
+
+            {% if latest_waist %}
+                <p>
+                    Latest:
+                    <strong>{{ latest_waist.waist_cm }} cm</strong>
+                    · {{ latest_waist.date|date:"j M Y" }}
+                </p>
+
+                {% if previous_waist %}
+                    <p>
+                        Previous: {{ previous_waist.waist_cm }} cm
+                        · {{ previous_waist.date|date:"j M Y" }}
+                    </p>
+                    <p>
+                        Change:
+                        <strong>{{ waist_change_display }} cm</strong>
+                        · {{ waist_direction }}
+                    </p>
+                {% else %}
+                    <p>Add another waist measurement to see the change.</p>
+                {% endif %}
+            {% else %}
+                <p>No waist measurements yet. Recording waist is optional.</p>
+            {% endif %}
+        </article>
+    </section>
+
+    <header class="page-intro">
+        <h2>Measurement history</h2>
+    </header>
+
+    <div class="session-list">
+        {% for measurement in measurements %}
+            <article class="card">
+                <h2>{{ measurement.date|date:"j M Y" }}</h2>
+
+                {% if measurement.weight_kg != None %}
+                    <p>Bodyweight: {{ measurement.weight_kg }} kg</p>
+                {% endif %}
+
+                {% if measurement.waist_cm != None %}
+                    <p>Waist: {{ measurement.waist_cm }} cm</p>
+                {% endif %}
+
+                <a class="button secondary"
+                   href="{% url 'tracking:measurement-update' measurement.pk %}">
+                    Edit measurement
+                </a>
+            </article>
+        {% empty %}
+            <div class="card">
+                <p>No measurements yet.</p>
+            </div>
+        {% endfor %}
+    </div>
+
+    {% if is_paginated %}
+        <nav class="form-actions" aria-label="Measurement pages">
+            {% if page_obj.has_previous %}
+                <a class="button secondary"
+                   href="?page={{ page_obj.previous_page_number }}">
+                    Previous
+                </a>
+            {% endif %}
+
+            <p>Page {{ page_obj.number }} of {{ paginator.num_pages }}</p>
+
+            {% if page_obj.has_next %}
+                <a class="button secondary"
+                   href="?page={{ page_obj.next_page_number }}">
+                    Next
+                </a>
+            {% endif %}
+        </nav>
+    {% endif %}
+{% endblock %}

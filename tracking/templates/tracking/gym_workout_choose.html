@@ -1,0 +1,62 @@
+{% extends "tracking/base.html" %}
+
+{% block title %}New Workout{% endblock %}
+
+{% block content %}
+    <header class="page-intro">
+        <h1>New workout</h1>
+        <p class="muted">
+            Start from a saved template or create a blank workout.
+        </p>
+
+        <div class="form-actions">
+            <a class="button secondary"
+               href="{% url 'tracking:routine-list' %}">
+                Manage routines
+            </a>
+            <a class="button secondary"
+               href="{% url 'tracking:gym-workout-list' %}">
+                Workout history
+            </a>
+        </div>
+    </header>
+
+    <h2>From a template</h2>
+
+    <div class="session-list">
+        {% for template in templates %}
+            <article class="card">
+                <h2>{{ template.name }}</h2>
+                <p class="muted">{{ template.routine.name }}</p>
+
+                {% if template.notes %}
+                    {{ template.notes|linebreaks }}
+                {% endif %}
+
+                <a class="button"
+                   href="{% url 'tracking:gym-workout-start' template.pk %}">
+                    Use template
+                </a>
+            </article>
+        {% empty %}
+            <div class="card">
+                <p>No saved workout templates yet.</p>
+                <a class="button"
+                   href="{% url 'tracking:routine-list' %}">
+                    Set up a routine
+                </a>
+            </div>
+        {% endfor %}
+
+        <article class="card">
+            <h2>Blank workout</h2>
+            <p class="muted">
+                Create a workout without copying a template.
+            </p>
+            <a class="button secondary"
+               href="{% url 'tracking:gym-workout-blank' %}">
+                Create blank workout
+            </a>
+        </article>
+    </div>
+{% endblock %}

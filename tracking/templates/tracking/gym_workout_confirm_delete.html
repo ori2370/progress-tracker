@@ -1,0 +1,33 @@
+{% extends "tracking/base.html" %}
+
+{% block title %}Delete Workout{% endblock %}
+
+{% block content %}
+    <header class="page-intro">
+        <h1>Delete workout?</h1>
+    </header>
+
+    <div class="card">
+        <h2>{{ workout.title }}</h2>
+        <p class="muted">{{ workout.date|date:"j M Y" }}</p>
+
+        <p>
+            This permanently deletes this workout and its recorded sets.
+            Your exercise library and routine templates will remain.
+        </p>
+
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="form-actions">
+                <button type="submit" class="danger">
+                    Delete workout
+                </button>
+                <a class="button secondary"
+                   href="{% url 'tracking:gym-workout-detail' workout.pk %}">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+{% endblock %}

@@ -1,5 +1,4 @@
-from django.urls import path
-
+from django.urls import include, path
 from .focus_views import (
     TennisFocusCreateView,
     TennisFocusListView,
@@ -44,4 +43,5 @@ urlpatterns = [
         TennisFocusUpdateView.as_view(),
         name="tennis-focus-update",
     ),
+    path("gym/", include("tracking.gym_urls")),
 ]
