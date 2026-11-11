@@ -27,7 +27,12 @@
             {{ form.new_name }}
             {{ form.new_name.errors }}
         </div>
-
+        <div class="form-field">
+            {{ form.tracking_mode.label_tag }}
+            {{ form.tracking_mode }}
+            <p class="muted">{{ form.tracking_mode.help_text }}</p>
+            {{ form.tracking_mode.errors }}
+        </div>
         <div class="form-field">
             <label class="session-selector"
                    for="{{ form.save_to_library.id_for_label }}">

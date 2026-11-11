@@ -1,7 +1,7 @@
 from django import forms
 from django.utils import timezone
 
-from .models import BodyMeasurement, GymWorkout,ExerciseDefinition,GymSet,GymExercise
+from .models import BodyMeasurement, GymWorkout,ExerciseDefinition,GymSet,GymExercise,ExerciseTrackingMode
 
 class BodyMeasurementForm(forms.ModelForm):
     class Meta:
@@ -54,6 +54,7 @@ class ExerciseDefinitionForm(forms.ModelForm):
         model = ExerciseDefinition
         fields = [
             "name",
+            "tracking_mode",
             "equipment",
             "notes",
             "goal_weight_kg",
@@ -61,6 +62,7 @@ class ExerciseDefinitionForm(forms.ModelForm):
         ]
         labels = {
             "name": "Exercise name",
+            "tracking_mode": "Log using",
             "equipment": "Equipment / machine",
             "goal_weight_kg": "Goal weight (kg)",
             "goal_reps": "Goal reps",
@@ -81,6 +83,18 @@ class ExerciseDefinitionForm(forms.ModelForm):
         self.instance.user = user
 
 class GymSetForm(forms.ModelForm):
+    minutes = forms.IntegerField(
+        min_value=0,
+        required=False,
+        widget=forms.NumberInput(attrs={"min": 0}),
+    )
+    seconds = forms.IntegerField(
+        min_value=0,
+        max_value=59,
+        required=False,
+        widget=forms.NumberInput(attrs={"min": 0, "max": 59}),
+    )
+
     class Meta:
         model = GymSet
         fields = ["reps", "weight_kg"]
@@ -98,11 +112,69 @@ class GymSetForm(forms.ModelForm):
             ),
         }
 
+    def __init__(self, *args, exercise, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.instance.exercise = exercise
+        self.is_timed = (
+            exercise.tracking_mode == ExerciseTrackingMode.DURATION
+        )
+
+        if self.is_timed:
+            self.fields.pop("reps")
+            self.fields.pop("weight_kg")
+
+            if not self.is_bound and self.instance.duration_seconds:
+                minutes, seconds = divmod(
+                    self.instance.duration_seconds,
+                    60,
+                )
+                self.initial["minutes"] = minutes
+                self.initial["seconds"] = seconds
+        else:
+            self.fields.pop("minutes")
+            self.fields.pop("seconds")
+            self.fields["reps"].required = True
+            self.fields["weight_kg"].required = True
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        if self.is_timed:
+            self.instance.reps = None
+            self.instance.weight_kg = None
+
+            if "minutes" in self.errors or "seconds" in self.errors:
+                return cleaned_data
+
+            duration = (
+                (cleaned_data.get("minutes") or 0) * 60
+                + (cleaned_data.get("seconds") or 0)
+            )
+
+            self.instance.duration_seconds = duration or None
+
+            if duration == 0:
+                self.add_error(
+                    "minutes",
+                    "Enter a duration greater than zero.",
+                )
+        else:
+            self.instance.duration_seconds = None
+
+        return cleaned_data
+
 class GymExerciseForm(forms.ModelForm):
     new_name = forms.CharField(
         label="New exercise / activity",
         max_length=150,
         required=False,
+    )
+    tracking_mode = forms.ChoiceField(
+        label="Log new activity using",
+        choices=ExerciseTrackingMode.choices,
+        initial=ExerciseTrackingMode.STRENGTH,
+        required=False,
+        help_text="For a library exercise, its saved mode is used.",
     )
     save_to_library = forms.BooleanField(
         label="Save new exercise to my library",

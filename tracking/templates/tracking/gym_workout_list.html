@@ -40,7 +40,11 @@
                     {% for set in exercise.sets.all %}
                         <p>
                             Set {{ set.number }}:
-                            {{ set.reps }} reps × {{ set.weight_kg }} kg
+                            {% if set.duration_seconds != None %}
+                                {{ set.duration_display }}
+                            {% else %}
+                                {{ set.reps }} reps × {{ set.weight_kg }} kg
+                            {% endif %}
                         </p>
                     {% endfor %}
                 {% empty %}

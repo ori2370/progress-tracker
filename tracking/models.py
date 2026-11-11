@@ -155,6 +155,9 @@ class MatchSet(models.Model):
             f"Set {self.number}: "
             f"{self.my_games}–{self.opponent_games}"
         )
+class ExerciseTrackingMode(models.TextChoices):
+    STRENGTH = "strength", "Reps and weight"
+    DURATION = "duration", "Duration"
 class ExerciseDefinition(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -162,6 +165,11 @@ class ExerciseDefinition(models.Model):
         related_name="exercise_definitions",
     )
     name = models.CharField(max_length=150)
+    tracking_mode = models.CharField(
+        max_length=10,
+        choices=ExerciseTrackingMode.choices,
+        default=ExerciseTrackingMode.STRENGTH,
+    )
     equipment = models.CharField(
         max_length=150,
         blank=True,
@@ -270,6 +278,11 @@ class GymExercise(models.Model):
         null=True,
     )
     name = models.CharField(max_length=150)
+    tracking_mode = models.CharField(
+        max_length=10,
+        choices=ExerciseTrackingMode.choices,
+        default=ExerciseTrackingMode.STRENGTH,
+    )
     position = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1)],
     )
@@ -310,13 +323,22 @@ class GymSet(models.Model):
         validators=[MinValueValidator(1)],
     )
     reps = models.PositiveSmallIntegerField(
+        blank=True,
+        null=True,
         validators=[MinValueValidator(1)],
     )
     weight_kg = models.DecimalField(
         max_digits=6,
         decimal_places=2,
+        blank=True,
+        null=True,
         validators=[MinValueValidator(Decimal("0"))],
         help_text="External weight in kg. Use 0 for bodyweight only.",
+    )
+    duration_seconds = models.PositiveIntegerField(
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(1)],
     )
 
     class Meta:
@@ -331,18 +353,91 @@ class GymSet(models.Model):
                 name="gym_set_positive_number",
             ),
             models.CheckConstraint(
-                condition=models.Q(reps__gte=1),
+                condition=(
+                    models.Q(reps__isnull=True)
+                    | models.Q(reps__gte=1)
+                ),
                 name="gym_set_positive_reps",
             ),
             models.CheckConstraint(
-                condition=models.Q(weight_kg__gte=0),
+                condition=(
+                    models.Q(weight_kg__isnull=True)
+                    | models.Q(weight_kg__gte=0)
+                ),
                 name="gym_set_nonnegative_weight",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(duration_seconds__isnull=True)
+                    | models.Q(duration_seconds__gte=1)
+                ),
+                name="gym_set_positive_duration",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(
+                        reps__isnull=False,
+                        weight_kg__isnull=False,
+                        duration_seconds__isnull=True,
+                    )
+                    | models.Q(
+                        reps__isnull=True,
+                        weight_kg__isnull=True,
+                        duration_seconds__isnull=False,
+                    )
+                ),
+                name="gym_set_strength_or_duration",
             ),
         ]
 
-    def __str__(self):
-        return f"Set {self.number}: {self.reps} reps × {self.weight_kg} kg"
+    def clean(self):
+        super().clean()
 
+        if not self.exercise_id:
+            return
+
+        if self.exercise.tracking_mode == ExerciseTrackingMode.DURATION:
+            if self.duration_seconds is None:
+                raise ValidationError(
+                    "Enter a duration for this activity."
+                )
+
+            if self.reps is not None or self.weight_kg is not None:
+                raise ValidationError(
+                    "Timed activities use duration, not reps or weight."
+                )
+        else:
+            if self.reps is None or self.weight_kg is None:
+                raise ValidationError(
+                    "Enter both reps and weight."
+                )
+
+            if self.duration_seconds is not None:
+                raise ValidationError(
+                    "Strength exercises use reps and weight, not duration."
+                )
+
+    @property
+    def duration_display(self):
+        if self.duration_seconds is None:
+            return ""
+
+        minutes, seconds = divmod(self.duration_seconds, 60)
+
+        if minutes and seconds:
+            return f"{minutes} min {seconds} sec"
+        if minutes:
+            return f"{minutes} min"
+        return f"{seconds} sec"
+
+    def __str__(self):
+        if self.duration_seconds is not None:
+            return f"Set {self.number}: {self.duration_display}"
+
+        return (
+            f"Set {self.number}: "
+            f"{self.reps} reps × {self.weight_kg} kg"
+        )
 
 class BodyMeasurement(models.Model):
     user = models.ForeignKey(

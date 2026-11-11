@@ -13,7 +13,11 @@
             {% for set in previous_performance.sets.all %}
                 <p>
                     Set {{ set.number }}:
-                    {{ set.reps }} reps × {{ set.weight_kg }} kg
+                    {% if set.duration_seconds != None %}
+                        {{ set.duration_display }}
+                    {% else %}
+                        {{ set.reps }} reps × {{ set.weight_kg }} kg
+                    {% endif %}
                 </p>
             {% endfor %}
         {% else %}
@@ -21,19 +25,28 @@
         {% endif %}
     </article>
 
-    <article class="card">
+        <article class="card">
         <h2>Personal best</h2>
 
         {% if personal_best %}
             <p>
                 <strong>
-                    {{ personal_best.weight_kg }} kg
-                    × {{ personal_best.reps }} reps
+                    {% if personal_best.duration_seconds != None %}
+                        {{ personal_best.duration_display }}
+                    {% else %}
+                        {{ personal_best.weight_kg }} kg
+                        × {{ personal_best.reps }} reps
+                    {% endif %}
                 </strong>
             </p>
+
             <p class="muted">
                 {{ personal_best.exercise.workout.date|date:"j M Y" }}
-                · Heaviest logged set; ties use the higher rep count.
+                {% if personal_best.duration_seconds != None %}
+                    · Longest logged duration.
+                {% else %}
+                    · Heaviest logged set; ties use the higher rep count.
+                {% endif %}
             </p>
         {% else %}
             <p class="muted">Record your first set to establish a best.</p>
