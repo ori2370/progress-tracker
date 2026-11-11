@@ -105,10 +105,18 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+          cache: false
+
       - name: Install encryption tool
         run: |
-          sudo apt-get update
-          sudo apt-get install -y age
+          mkdir -p "$RUNNER_TEMP/age-bin"
+          GOBIN="$RUNNER_TEMP/age-bin" \
+            go install filippo.io/age/cmd/...@v1.2.1
+          echo "$RUNNER_TEMP/age-bin" >> "$GITHUB_PATH"
 
       - name: Test backup and restore
         run: bash ci/test-backup.sh
