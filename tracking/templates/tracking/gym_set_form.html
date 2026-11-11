@@ -23,10 +23,14 @@
         {{ form.non_field_errors }}
 
         <h2>
-            {% if object %}
-                Edit set {{ object.number }}
+            {% if exercise.tracking_mode == "duration" %}
+                {% if object %}Edit duration{% else %}Log duration{% endif %}
             {% else %}
-                Add a set
+                {% if object %}
+                    Edit set {{ object.number }}
+                {% else %}
+                    Add a set
+                {% endif %}
             {% endif %}
         </h2>
 
@@ -49,7 +53,13 @@
         {% endfor %}
 
         <div class="form-actions">
-            <button type="submit">Save set</button>
+            <button type="submit">
+                {% if exercise.tracking_mode == "duration" %}
+                    Save duration
+                {% else %}
+                    Save set
+                {% endif %}
+            </button>
             <a class="button secondary"
                href="{% url 'tracking:gym-workout-detail' exercise.workout_id %}">
                 Back to workout
@@ -63,8 +73,19 @@
         <div class="session-list">
             {% for set in recorded_sets %}
                 <article class="card">
-                    <h3>Set {{ set.number }}</h3>
-                    <p>{{ set.reps }} reps × {{ set.weight_kg }} kg</p>
+                    <h3>
+                        {% if exercise.tracking_mode == "duration" %}
+                            Duration entry {{ set.number }}
+                        {% else %}
+                            Set {{ set.number }}
+                        {% endif %}
+                    </h3>
+                    <p>{% if set.duration_seconds != None %}
+                            {{ set.duration_display }}
+                        {% else %}
+                            {{ set.reps }} reps × {{ set.weight_kg }} kg
+                        {% endif %}
+                    </p>
 
                     <a class="button secondary"
                        href="{% url 'tracking:gym-set-update' set.pk %}">

@@ -8,7 +8,7 @@ from django.utils import timezone
 from django.views.generic import CreateView, ListView, UpdateView, DetailView,TemplateView,DeleteView
 
 from .gym_forms import BodyMeasurementForm, GymWorkoutForm,ExerciseDefinitionForm
-from .models import BodyMeasurement, GymWorkout,ExerciseDefinition,GymExercise,WorkoutTemplate
+from .models import BodyMeasurement, ExerciseTrackingMode, GymWorkout,ExerciseDefinition,GymExercise,WorkoutTemplate
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from .gym_forms import GymExerciseForm
@@ -236,6 +236,7 @@ class GymWorkoutFromTemplateView(OwnedGymDataMixin, CreateView):
                     workout=self.object,
                     definition=entry.definition,
                     name=str(entry.definition),
+                    tracking_mode=entry.definition.tracking_mode,
                     position=entry.position,
                 )
                 for entry in entries
@@ -300,19 +301,33 @@ class GymExerciseCreateView(OwnedGymDataMixin, CreateView):
 
     def form_valid(self, form):
         workout = self.get_workout()
+        definition = form.cleaned_data.get("definition")
+        new_name = form.cleaned_data["new_name"]
+        selected_mode = (
+            form.cleaned_data.get("tracking_mode")
+            or ExerciseTrackingMode.STRENGTH
+        )
 
         with transaction.atomic():
             GymWorkout.objects.select_for_update().get(pk=workout.pk)
 
-            definition = form.cleaned_data.get("definition")
-            new_name = form.cleaned_data["new_name"]
-
             if new_name and form.cleaned_data["save_to_library"]:
-                definition, _ = ExerciseDefinition.objects.get_or_create(
-                    user=self.request.user,
-                    name=new_name,
-                    equipment="",
+                definition, created = (
+                    ExerciseDefinition.objects.get_or_create(
+                        user=self.request.user,
+                        name=new_name,
+                        equipment="",
+                        defaults={"tracking_mode": selected_mode},
+                    )
                 )
+
+                if not created and definition.tracking_mode != selected_mode:
+                    form.add_error(
+                        "new_name",
+                        "A library exercise with this name uses a different "
+                        "logging mode. Choose it above or use a different name.",
+                    )
+                    return self.form_invalid(form)
 
             last_position = workout.exercises.aggregate(
                 last=Max("position")
@@ -320,6 +335,11 @@ class GymExerciseCreateView(OwnedGymDataMixin, CreateView):
 
             form.instance.position = (last_position or 0) + 1
             form.instance.definition = definition
+            form.instance.tracking_mode = (
+                definition.tracking_mode
+                if definition
+                else selected_mode
+            )
             form.instance.name = (
                 str(definition) if definition else new_name
             )

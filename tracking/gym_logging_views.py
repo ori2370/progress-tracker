@@ -7,7 +7,7 @@ from django.views.generic import CreateView, UpdateView
 
 from .gym_forms import GymSetForm
 from .gym_views import OwnedGymDataMixin
-from .models import GymExercise, GymSet
+from .models import GymExercise, GymSet,ExerciseTrackingMode
 
 
 class ExerciseProgressMixin:
@@ -28,6 +28,7 @@ class ExerciseProgressMixin:
                 workout__user=self.request.user,
                 workout__date__lte=cutoff,
                 sets__isnull=False,
+                tracking_mode=exercise.tracking_mode,
             )
             .exclude(workout_id=exercise.workout_id)
             .select_related("workout")
@@ -42,21 +43,37 @@ class ExerciseProgressMixin:
             .first()
         )
 
-        personal_best = (
-            GymSet.objects.filter(
-                exercise__definition=definition,
-                exercise__workout__user=self.request.user,
-                exercise__workout__date__lte=today,
+        eligible_sets = GymSet.objects.filter(
+            exercise__definition=definition,
+            exercise__workout__user=self.request.user,
+            exercise__workout__date__lte=today,
+            exercise__tracking_mode=exercise.tracking_mode,
+        ).select_related("exercise__workout")
+
+        if exercise.tracking_mode == ExerciseTrackingMode.DURATION:
+            personal_best = (
+                eligible_sets.filter(duration_seconds__isnull=False)
+                .order_by(
+                    "-duration_seconds",
+                    "-exercise__workout__date",
+                    "-pk",
+                )
+                .first()
             )
-            .select_related("exercise__workout")
-            .order_by(
-                "-weight_kg",
-                "-reps",
-                "-exercise__workout__date",
-                "-pk",
+        else:
+            personal_best = (
+                eligible_sets.filter(
+                    reps__isnull=False,
+                    weight_kg__isnull=False,
+                )
+                .order_by(
+                    "-weight_kg",
+                    "-reps",
+                    "-exercise__workout__date",
+                    "-pk",
+                )
+                .first()
             )
-            .first()
-        )
 
         return {
             "exercise_definition": definition,
@@ -91,7 +108,10 @@ class GymSetCreateView(
             )
 
         return self._exercise
-
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["exercise"] = self.get_exercise()
+        return kwargs
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         exercise = self.get_exercise()
@@ -140,7 +160,10 @@ class GymSetUpdateView(
             "exercise__workout",
             "exercise__definition",
         )
-
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["exercise"] = self.object.exercise
+        return kwargs
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         exercise = self.object.exercise
