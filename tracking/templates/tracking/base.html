@@ -14,14 +14,22 @@
 
             <nav aria-label="Progress sections">
                 <a href="{% url 'tracking:tennis-list' %}"
-                   aria-current="location">Tennis</a>
+                   {% if request.path|slice:":8" == "/tennis/" %}
+                       aria-current="page"
+                    {% endif %}>Tennis</a>
                 <span class="nav-placeholder">Posture · Soon</span>
-                <span class="nav-placeholder">Gym · Soon</span>
+                <a href="{% url 'tracking:gym-workout-list' %}"
+                   {% if request.path|slice:":5" == "/gym/" %}
+                       aria-current="page"
+                    {% endif %}>
+                    Gym
+                </a>
             </nav>
         </div>
     </header>
 
     <main class="container main-content">
+        {% if request.path|slice:":8" == "/tennis/" %}
         {% with page=request.resolver_match.url_name %}
             <nav class="section-nav" aria-label="Tennis pages">
                 <a href="{% url 'tracking:tennis-list' %}"
@@ -39,7 +47,23 @@
                 </a>
             </nav>
         {% endwith %}
-
+        {% endif %}
+        {% if request.path|slice:":5" == "/gym/" %}
+            <nav class="section-nav" aria-label="Gym pages">
+                <a href="{% url 'tracking:gym-workout-list' %}">
+                    Workouts
+                </a>
+                <a href="{% url 'tracking:routine-list' %}">
+                    My routines
+                </a>
+                <a href="{% url 'tracking:exercise-list' %}">
+                    Exercise library
+                </a>
+                <a href="{% url 'tracking:measurement-list' %}">
+                    Measurements
+                </a>
+            </nav>
+        {% endif %}
         {% block content %}{% endblock %}
     </main>
 

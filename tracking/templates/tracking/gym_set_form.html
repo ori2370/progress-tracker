@@ -1,0 +1,79 @@
+{% extends "tracking/base.html" %}
+
+{% block title %}Log Exercise Sets{% endblock %}
+
+{% block content %}
+    <header class="page-intro">
+        <h1>{{ exercise.name }}</h1>
+        <p class="muted">
+            {{ exercise.workout.title }}
+            · {{ exercise.workout.date|date:"j M Y" }}
+        </p>
+    </header>
+    {% if exercise_definition %}
+        {% include "tracking/exercise_progress.html" %}
+        <div class="main-content">
+            <p class="muted">
+                History is shared across every workout using this library exercise.
+            </p>
+        </div>
+    {% endif %}
+    <form method="post" class="card session-form">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        <h2>
+            {% if object %}
+                Edit set {{ object.number }}
+            {% else %}
+                Add a set
+            {% endif %}
+        </h2>
+
+        <p class="muted">* Required</p>
+
+        {% for field in form %}
+            <div class="form-field">
+                <label for="{{ field.id_for_label }}">
+                    {{ field.label }}{% if field.field.required %}<span aria-hidden="true"> *</span>{% endif %}
+                </label>
+
+                {{ field }}
+
+                {% if field.help_text %}
+                    <p class="muted">{{ field.help_text }}</p>
+                {% endif %}
+
+                {{ field.errors }}
+            </div>
+        {% endfor %}
+
+        <div class="form-actions">
+            <button type="submit">Save set</button>
+            <a class="button secondary"
+               href="{% url 'tracking:gym-workout-detail' exercise.workout_id %}">
+                Back to workout
+            </a>
+        </div>
+    </form>
+
+    <section class="main-content" aria-label="Recorded sets">
+        <h2>This workout</h2>
+
+        <div class="session-list">
+            {% for set in recorded_sets %}
+                <article class="card">
+                    <h3>Set {{ set.number }}</h3>
+                    <p>{{ set.reps }} reps × {{ set.weight_kg }} kg</p>
+
+                    <a class="button secondary"
+                       href="{% url 'tracking:gym-set-update' set.pk %}">
+                        Edit set
+                    </a>
+                </article>
+            {% empty %}
+                <p class="muted">No sets recorded yet.</p>
+            {% endfor %}
+        </div>
+    </section>
+{% endblock %}

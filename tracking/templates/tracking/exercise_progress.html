@@ -1,0 +1,61 @@
+<section class="session-list" aria-label="Exercise progress">
+    <article class="card">
+        <h2>Previous performance</h2>
+
+        {% if previous_performance %}
+           <p class="muted">
+               <a href="{% url 'tracking:gym-workout-detail' previous_performance.workout.pk %}">
+                   {{ previous_performance.workout.title }}
+                </a>
+                 · {{ previous_performance.workout.date|date:"j M Y" }}
+            </p>
+
+            {% for set in previous_performance.sets.all %}
+                <p>
+                    Set {{ set.number }}:
+                    {{ set.reps }} reps × {{ set.weight_kg }} kg
+                </p>
+            {% endfor %}
+        {% else %}
+            <p class="muted">No previous logged performance yet.</p>
+        {% endif %}
+    </article>
+
+    <article class="card">
+        <h2>Personal best</h2>
+
+        {% if personal_best %}
+            <p>
+                <strong>
+                    {{ personal_best.weight_kg }} kg
+                    × {{ personal_best.reps }} reps
+                </strong>
+            </p>
+            <p class="muted">
+                {{ personal_best.exercise.workout.date|date:"j M Y" }}
+                · Heaviest logged set; ties use the higher rep count.
+            </p>
+        {% else %}
+            <p class="muted">Record your first set to establish a best.</p>
+        {% endif %}
+    </article>
+
+    <article class="card">
+        <h2>Goal</h2>
+
+        {% if exercise_definition.goal_reps %}
+            <p>
+                <strong>
+                    {{ exercise_definition.goal_weight_kg }} kg
+                    × {{ exercise_definition.goal_reps }} reps
+                </strong>
+            </p>
+        {% else %}
+            <p class="muted">No goal set yet.</p>
+        {% endif %}
+
+        <a href="{% url 'tracking:exercise-update' exercise_definition.pk %}">
+            Edit exercise goal
+        </a>
+    </article>
+</section>

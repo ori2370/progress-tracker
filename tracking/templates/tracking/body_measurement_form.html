@@ -1,0 +1,35 @@
+{% extends "tracking/base.html" %}
+
+{% block title %}Body Measurements{% endblock %}
+
+{% block content %}
+    <header class="page-intro">
+        <h1>
+            {% if object %}Edit measurement{% else %}Log measurements{% endif %}
+        </h1>
+        <p class="muted">
+            Record bodyweight, waist circumference, or both.
+        </p>
+    </header>
+
+    <form method="post" class="card session-form">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        {% for field in form %}
+            <div class="form-field">
+                {{ field.label_tag }}
+                {{ field }}
+                {{ field.errors }}
+            </div>
+        {% endfor %}
+
+        <div class="form-actions">
+            <button type="submit">Save measurements</button>
+            <a class="button secondary"
+               href="{% url 'tracking:measurement-list' %}">
+                Cancel
+            </a>
+        </div>
+    </form>
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends "tracking/base.html" %}
+
+{% block title %}Gym Workouts{% endblock %}
+
+{% block content %}
+    <header class="page-intro">
+        <h1>Gym workouts</h1>
+        <p class="muted">Your exercises, sets, reps, and weights.</p>
+
+        <div class="form-actions">
+            <a class="button"
+               href="{% url 'tracking:gym-workout-create' %}">
+                New workout
+            </a>
+            <a class="button secondary"
+               href="{% url 'tracking:measurement-list' %}">
+                Body measurements
+            </a>
+        </div>
+    </header>
+
+    <div class="session-list">
+        {% for workout in workouts %}
+            <article class="card">
+                <h2>{{ workout.title }}</h2>
+                <p class="muted">
+                    {{ workout.date|date:"j M Y" }}
+                    {% if workout.start_time %}
+                        at {{ workout.start_time|time:"H:i" }}
+                    {% endif %}
+                </p>
+
+                {% if workout.notes %}
+                    {{ workout.notes|linebreaks }}
+                {% endif %}
+
+                {% for exercise in workout.exercises.all %}
+                    <h3>{{ exercise.name }}</h3>
+
+                    {% for set in exercise.sets.all %}
+                        <p>
+                            Set {{ set.number }}:
+                            {{ set.reps }} reps × {{ set.weight_kg }} kg
+                        </p>
+                    {% endfor %}
+                {% empty %}
+                    <p class="muted">No exercises added yet.</p>
+                {% endfor %}
+
+                <a class="button secondary"
+                   href="{% url 'tracking:gym-workout-detail' workout.pk %}">
+                    Open workout
+                </a>
+            </article>
+        {% empty %}
+            <div class="card">
+                <p>No workouts yet. Create your first workout above.</p>
+            </div>
+        {% endfor %}
+    </div>
+
+    {% if is_paginated %}
+        <nav class="form-actions" aria-label="Workout pages">
+            {% if page_obj.has_previous %}
+                <a class="button secondary"
+                   href="?page={{ page_obj.previous_page_number }}">
+                    Previous
+                </a>
+            {% endif %}
+
+            <p>Page {{ page_obj.number }} of {{ paginator.num_pages }}</p>
+
+            {% if page_obj.has_next %}
+                <a class="button secondary"
+                   href="?page={{ page_obj.next_page_number }}">
+                    Next
+                </a>
+            {% endif %}
+        </nav>
+    {% endif %}
+{% endblock %}

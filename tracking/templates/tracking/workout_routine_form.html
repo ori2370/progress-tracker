@@ -1,0 +1,38 @@
+{% extends "tracking/base.html" %}
+
+{% block title %}Gym Routine{% endblock %}
+
+{% block content %}
+    <header class="page-intro">
+        <h1>{% if object %}Edit routine{% else %}New routine{% endif %}</h1>
+        <p class="muted">
+            Set up your routine. Add its workout templates afterward.
+        </p>
+    </header>
+
+    <form method="post" class="card session-form">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        <p class="muted">* Required</p>
+
+        {% for field in form %}
+            <div class="form-field">
+                <label for="{{ field.id_for_label }}">
+                    {{ field.label }}{% if field.field.required %}<span aria-hidden="true"> *</span>{% endif %}
+                </label>
+
+                {{ field }}
+                {{ field.errors }}
+            </div>
+        {% endfor %}
+
+        <div class="form-actions">
+            <button type="submit">Save routine</button>
+            <a class="button secondary"
+               href="{% url 'tracking:routine-list' %}">
+                Cancel
+            </a>
+        </div>
+    </form>
+{% endblock %}

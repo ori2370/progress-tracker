@@ -1,0 +1,66 @@
+{% extends "tracking/base.html" %}
+
+{% block title %}{{ workout.title }}{% endblock %}
+
+{% block content %}
+    <header class="page-intro">
+        <h1>{{ workout.title }}</h1>
+        <p class="muted">
+            {{ workout.date|date:"j M Y" }}
+            {% if workout.start_time %}
+                at {{ workout.start_time|time:"H:i" }}
+            {% endif %}
+        </p>
+
+        {% if workout.notes %}
+            {{ workout.notes|linebreaks }}
+        {% endif %}
+
+        <div class="form-actions">
+            <a class="button"
+                href="{% url 'tracking:gym-exercise-create' workout.pk %}">
+                Add exercise
+            </a>
+
+            <a class="button secondary"
+                href="{% url 'tracking:gym-workout-list' %}">
+                Workout history
+            </a>
+
+            <details class="actions-menu">
+                <summary aria-label="Workout actions">⋮</summary>
+                <div class="actions-menu-content">
+                    <a class="button danger"
+                        href="{% url 'tracking:gym-workout-delete' workout.pk %}">
+                        Delete workout
+                    </a>
+                </div>
+            </details>
+        </div>
+    </header>
+
+    <div class="session-list">
+        {% for exercise in workout.exercises.all %}
+            <article class="card">
+                <h2>{{ exercise.position }}. {{ exercise.name }}</h2>
+
+                {% for set in exercise.sets.all %}
+                    <p>
+                        Set {{ set.number }}:
+                        {{ set.reps }} reps × {{ set.weight_kg }} kg
+                    </p>
+                {% empty %}
+                    <p class="muted">No sets recorded yet.</p>
+                {% endfor %}
+                <a class="button"
+                   href="{% url 'tracking:gym-set-create' exercise.pk %}">
+                    Log sets
+                </a>
+            </article>
+        {% empty %}
+            <div class="card">
+                <p>No exercises in this workout.</p>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}

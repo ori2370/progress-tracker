@@ -1,0 +1,50 @@
+{% extends "tracking/base.html" %}
+
+{% block title %}My Gym Routines{% endblock %}
+
+{% block content %}
+    <header class="page-intro">
+        <h1>My routines</h1>
+        <p class="muted">
+            Reusable plans for your gym workouts.
+        </p>
+
+        <div class="form-actions">
+            <a class="button" href="{% url 'tracking:routine-create' %}">
+                New routine
+            </a>
+            <a class="button secondary"
+               href="{% url 'tracking:gym-workout-list' %}">
+                Workouts
+            </a>
+        </div>
+    </header>
+
+    <div class="session-list">
+        {% for routine in routines %}
+            <article class="card">
+                <h2>{{ routine.name }}</h2>
+                <p>
+                    {{ routine.sessions_per_week }}
+                    session{{ routine.sessions_per_week|pluralize }} per week
+                </p>
+
+                {% if routine.notes %}
+                    {{ routine.notes|linebreaks }}
+                {% endif %}
+                <a class="button"
+                   href="{% url 'tracking:routine-detail' routine.pk %}">
+                    Open routine
+                </a>
+                <a class="button secondary"
+                   href="{% url 'tracking:routine-update' routine.pk %}">
+                    Edit routine
+                </a>
+            </article>
+        {% empty %}
+            <div class="card">
+                <p>No routines yet. Create your first routine above.</p>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}

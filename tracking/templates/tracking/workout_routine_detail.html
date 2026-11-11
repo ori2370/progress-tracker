@@ -1,0 +1,77 @@
+{% extends "tracking/base.html" %}
+
+{% block title %}{{ routine.name }}{% endblock %}
+
+{% block content %}
+    <header class="page-intro">
+        <h1>{{ routine.name }}</h1>
+        <p class="muted">
+            {{ routine.sessions_per_week }}
+            session{{ routine.sessions_per_week|pluralize }} per week
+        </p>
+
+        {% if routine.notes %}
+            {{ routine.notes|linebreaks }}
+        {% endif %}
+
+        <div class="form-actions">
+            <a class="button"
+               href="{% url 'tracking:template-create' routine.pk %}">
+                Add workout template
+            </a>
+            <a class="button secondary"
+               href="{% url 'tracking:routine-list' %}">
+                All routines
+            </a>
+        </div>
+    </header>
+
+    <div class="session-list">
+        {% for template in routine.templates.all %}
+            <article class="card">
+                <h2>{{ template.name }}</h2>
+
+                {% if template.notes %}
+                    {{ template.notes|linebreaks }}
+                {% endif %}
+
+                {% for entry in template.exercises.all %}
+                    <h3>{{ entry.position }}. {{ entry.definition }}</h3>
+                    <p>
+                        {{ entry.planned_sets }}
+                        set{{ entry.planned_sets|pluralize }}
+                        {% if entry.target_reps %}
+                            × {{ entry.target_reps }} reps
+                        {% endif %}
+                    </p>
+                    <p>
+                        <a href="{% url 'tracking:template-exercise-update' entry.pk %}">
+                            Edit exercise
+                        </a>
+                    </p>
+                {% empty %}
+                    <p class="muted">No exercises added yet.</p>
+                {% endfor %}
+
+                <div class="form-actions">
+                    <a class="button"
+                       href="{% url 'tracking:template-exercise-create' template.pk %}">
+                        Add exercise
+                    </a>
+                    <a class="button secondary"
+                       href="{% url 'tracking:template-update' template.pk %}">
+                        Edit template
+                    </a>
+                    <a class="button"
+                       href="{% url 'tracking:gym-workout-start' template.pk %}">
+                        Start workout
+                    </a>
+                </div>
+            </article>
+        {% empty %}
+            <div class="card">
+                <p>Add a workout template, such as FBW A.</p>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}

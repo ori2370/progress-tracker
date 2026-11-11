@@ -1,0 +1,74 @@
+{% extends "tracking/base.html" %}
+
+{% block title %}Exercise Library{% endblock %}
+
+{% block content %}
+    <header class="page-intro">
+        <h1>Exercise library</h1>
+        <p class="muted">
+            Shared exercises for all your gym workouts.
+        </p>
+
+        <div class="form-actions">
+            <a class="button" href="{% url 'tracking:exercise-create' %}">
+                New exercise
+            </a>
+            <a class="button secondary"
+               href="{% url 'tracking:gym-workout-list' %}">
+                Workouts
+            </a>
+        </div>
+    </header>
+
+    <div class="session-list">
+        {% for exercise in exercises %}
+            <article class="card">
+                <h2>{{ exercise.name }}</h2>
+
+                {% if exercise.equipment %}
+                    <p class="muted">{{ exercise.equipment }}</p>
+                {% endif %}
+
+                {% if exercise.notes %}
+                    {{ exercise.notes|linebreaks }}
+                {% endif %}
+
+                {% if exercise.goal_reps %}
+                    <p>
+                        Goal: {{ exercise.goal_weight_kg }} kg
+                        × {{ exercise.goal_reps }} reps
+                    </p>
+                {% endif %}
+
+                <a class="button secondary"
+                   href="{% url 'tracking:exercise-update' exercise.pk %}">
+                    Edit exercise
+                </a>
+            </article>
+        {% empty %}
+            <div class="card">
+                <p>No exercises yet. Add your first exercise above.</p>
+            </div>
+        {% endfor %}
+    </div>
+
+    {% if is_paginated %}
+        <nav class="form-actions" aria-label="Exercise pages">
+            {% if page_obj.has_previous %}
+                <a class="button secondary"
+                   href="?page={{ page_obj.previous_page_number }}">
+                    Previous
+                </a>
+            {% endif %}
+
+            <p>Page {{ page_obj.number }} of {{ paginator.num_pages }}</p>
+
+            {% if page_obj.has_next %}
+                <a class="button secondary"
+                   href="?page={{ page_obj.next_page_number }}">
+                    Next
+                </a>
+            {% endif %}
+        </nav>
+    {% endif %}
+{% endblock %}

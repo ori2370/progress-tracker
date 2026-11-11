@@ -1,0 +1,48 @@
+{% extends "tracking/base.html" %}
+
+{% block title %}Exercise Library{% endblock %}
+
+{% block content %}
+    <header class="page-intro">
+        <h1>{% if object %}Edit exercise{% else %}New exercise{% endif %}</h1>
+        <p class="muted">
+            Reuse this exercise across your workout routines.
+        </p>
+    </header>
+
+    <form method="post" class="card session-form">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        <p class="muted">* Required</p>
+
+        {% for field in form %}
+            <div class="form-field">
+                <label for="{{ field.id_for_label }}">
+                    {{ field.label }}{% if field.field.required %}<span aria-hidden="true"> *</span>{% endif %}
+                </label>
+
+                {{ field }}
+
+                {% if field.help_text %}
+                    <p class="muted">{{ field.help_text }}</p>
+                {% endif %}
+
+                {{ field.errors }}
+            </div>
+        {% endfor %}
+
+        <p class="muted">
+            For a goal, fill both weight and reps or leave both blank.
+            Use 0 kg for bodyweight only.
+        </p>
+
+        <div class="form-actions">
+            <button type="submit">Save exercise</button>
+            <a class="button secondary"
+               href="{% url 'tracking:exercise-list' %}">
+                Cancel
+            </a>
+        </div>
+    </form>
+{% endblock %}
