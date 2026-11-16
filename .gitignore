@@ -28,3 +28,15 @@ crash.*.log
 !*.tfvars.json.example
 *.tfbackend
 !*.tfbackend.example
+
+
+
+# Backup archives and private keys
+backups/
+*.dump
+*.dump.age
+*.sql
+*.sql.gz
+backup-key.txt
+*.pem
+*.key
