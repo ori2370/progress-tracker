@@ -1,0 +1,12 @@
+[Unit]
+Description=Copy encrypted Progress Tracker backups to Oracle
+Wants=network-online.target
+After=network-online.target tailscaled.service
+OnFailure=progress-tracker-notify@%n.service
+
+[Service]
+Type=oneshot
+User=DEPLOY_USER
+ExecStart=/bin/bash /home/DEPLOY_USER/apps/progress-tracker/deployment/home/upload-backups.sh
+UMask=0077
+TimeoutStartSec=10min
