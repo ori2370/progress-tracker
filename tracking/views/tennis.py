@@ -13,7 +13,7 @@ class TennisSessionListView(LoginRequiredMixin, ListView):
     model = TennisSession
     template_name = "tracking/tennis_session_list.html"
     context_object_name = "sessions"
-    login_url = "/admin/login/"
+    login_url = "/account/login/"
 
     SORT_OPTIONS = {
         "newest": ["-date", "-start_time", "-created_at"],
@@ -66,7 +66,7 @@ class TennisSessionCreateView(LoginRequiredMixin, CreateView):
     form_class = TennisSessionForm
     template_name = "tracking/tennis_session_form.html"
     success_url = reverse_lazy("tracking:tennis-list")
-    login_url = "/admin/login/"
+    login_url = "/account/login/"
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs["user"] = self.request.user
@@ -132,7 +132,7 @@ class TennisSessionCreateView(LoginRequiredMixin, CreateView):
 
 
 class TennisSessionBulkDeleteView(LoginRequiredMixin, View):
-    login_url = "/admin/login/"
+    login_url = "/account/login/"
     template_name = "tracking/tennis_session_confirm_delete.html"
 
     def get(self, request):

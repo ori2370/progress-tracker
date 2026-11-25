@@ -28,36 +28,44 @@
 
     <div class="session-list">
         {% for template in routine.templates.all %}
-            <article class="card">
-                <h2>{{ template.name }}</h2>
+            <article class="card template-card">
+                <h2 id="template-heading-{{ template.pk }}">
+                    {{ template.name }}
+                </h2>
 
                 {% if template.notes %}
                     {{ template.notes|linebreaks }}
                 {% endif %}
 
-                {% for entry in template.exercises.all %}
-                    <h3>{{ entry.position }}. {{ entry.definition }}</h3>
-                    <p>
-                        {{ entry.planned_sets }}
-                        set{{ entry.planned_sets|pluralize }}
-                        {% if entry.target_reps %}
-                            × {{ entry.target_reps }} reps
-                        {% endif %}
-                    </p>
-                    <p>
-                        <a href="{% url 'tracking:template-exercise-update' entry.pk %}">
-                            Edit exercise
-                        </a>
-                    </p>
-                {% empty %}
-                    <p class="muted">No exercises added yet.</p>
-                {% endfor %}
+                <div class="template-exercise-scroll"
+                     role="region"
+                     aria-labelledby="template-heading-{{ template.pk }}"
+                     tabindex="0">
+                    {% for entry in template.exercises.all %}
+                        <div class="template-exercise-preview">
+                            <h3>{{ entry.position }}. {{ entry.definition }}</h3>
+                            <p class="muted">
+                                {% if entry.definition.tracking_mode == "duration" %}
+                                    {{ entry.planned_sets }} round{{ entry.planned_sets|pluralize }}
+                                    {% if entry.target_duration_seconds %}
+                                        × {{ entry.target_duration_display }}
+                                    {% else %}
+                                        · No duration target
+                                    {% endif %}
+                                {% else %}
+                                    {{ entry.planned_sets }} set{{ entry.planned_sets|pluralize }}
+                                    {% if entry.target_reps %}
+                                        × {{ entry.target_reps }} reps
+                                    {% endif %}
+                                {% endif %}
+                            </p>
+                        </div>
+                    {% empty %}
+                        <p class="muted">No exercises added yet.</p>
+                    {% endfor %}
+                </div>
 
-                <div class="form-actions">
-                    <a class="button"
-                       href="{% url 'tracking:template-exercise-create' template.pk %}">
-                        Add exercise
-                    </a>
+                <div class="form-actions template-card-actions">
                     <a class="button secondary"
                        href="{% url 'tracking:template-update' template.pk %}">
                         Edit template

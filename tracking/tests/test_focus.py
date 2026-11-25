@@ -51,7 +51,7 @@ class TennisFocusTests(TestCase):
             with self.subTest(page=page):
                 response = self.client.get(page)
                 self.assertEqual(response.status_code, 302)
-                self.assertTrue(response.url.startswith("/admin/login/"))
+                self.assertTrue(response.url.startswith("/account/login/"))
 
     def test_list_shows_only_owned_focuses(self):
         TennisFocus.objects.create(

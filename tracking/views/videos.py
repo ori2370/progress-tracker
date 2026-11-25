@@ -14,7 +14,7 @@ from tracking.services.youtube import (
 
 @method_decorator(never_cache, name="dispatch")
 class ExerciseVideoSearchView(LoginRequiredMixin, View):
-    login_url = "/admin/login/"
+    login_url = "/account/login/"
     http_method_names = ["get"]
 
     def get(self, request, pk):

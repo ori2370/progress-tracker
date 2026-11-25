@@ -1,13 +1,29 @@
-from django.urls import reverse_lazy,reverse
-from django.views.generic import CreateView, ListView, UpdateView
-
-from .gym import OwnedGymDataMixin
-from ..models import WorkoutRoutine,WorkoutTemplate,TemplateExercise
-from ..forms.routines import WorkoutRoutineForm,WorkoutTemplateForm,TemplateExerciseForm
+from django.core.exceptions import ValidationError
+from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
-from django.views.generic import DetailView
-from django.db.models import Max
-
+from django.urls import reverse, reverse_lazy
+from django.views.generic import (
+    CreateView,
+    DetailView,
+    ListView,
+    UpdateView,
+)
+from django.db import transaction
+from .gym import OwnedGymDataMixin
+from ..forms.routines import (
+    TemplateExerciseForm,
+    WorkoutRoutineForm,
+    WorkoutTemplateForm,
+)
+from ..models import (
+    TemplateExercise,
+    WorkoutRoutine,
+    WorkoutTemplate,
+)
+from ..services.routines import (
+    reorder_template_exercises,
+    save_template_exercise,
+)
 
 
 class WorkoutRoutineListView(OwnedGymDataMixin, ListView):
@@ -77,8 +93,8 @@ class WorkoutTemplateCreateView(OwnedGymDataMixin, CreateView):
 
     def get_success_url(self):
         return reverse(
-            "tracking:routine-detail",
-            kwargs={"pk": self.get_routine().pk},
+            "tracking:template-update",
+            kwargs={"pk": self.object.pk},
         )
 
 
@@ -88,9 +104,11 @@ class WorkoutTemplateUpdateView(OwnedGymDataMixin, UpdateView):
     template_name = "tracking/workout_template_form.html"
 
     def get_queryset(self):
-        return WorkoutTemplate.objects.filter(
-            routine__user=self.request.user
-        ).select_related("routine")
+        return (
+            WorkoutTemplate.objects
+            .filter(routine__user=self.request.user)
+            .select_related("routine")
+        )
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -100,7 +118,31 @@ class WorkoutTemplateUpdateView(OwnedGymDataMixin, UpdateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["routine"] = self.object.routine
+        context["template_exercises"] = (
+            self.object.exercises
+            .select_related("definition")
+            .order_by("position", "pk")
+        )
         return context
+
+    def form_valid(self, form):
+        try:
+            with transaction.atomic():
+                reorder_template_exercises(
+                    template=self.object,
+                    user=self.request.user,
+                    ordered_ids=self.request.POST.getlist(
+                        "exercise_order"
+                    ),
+                )
+                self.object = form.save()
+        except ValidationError as error:
+            for message in error.messages:
+                form.add_error(None, message)
+
+            return self.form_invalid(form)
+
+        return HttpResponseRedirect(self.get_success_url())
 
     def get_success_url(self):
         return reverse(
@@ -108,11 +150,40 @@ class WorkoutTemplateUpdateView(OwnedGymDataMixin, UpdateView):
             kwargs={"pk": self.object.routine_id},
         )
 
-class TemplateExerciseCreateView(OwnedGymDataMixin, CreateView):
+
+class TemplateExerciseSaveMixin:
     model = TemplateExercise
     form_class = TemplateExerciseForm
     template_name = "tracking/template_exercise_form.html"
 
+    def form_valid(self, form):
+        entry = form.save(commit=False)
+
+        try:
+            self.object = save_template_exercise(
+                entry=entry,
+                user=self.request.user,
+            )
+        except ValidationError as error:
+            for message in error.messages:
+                form.add_error(None, message)
+
+            return self.form_invalid(form)
+
+        return HttpResponseRedirect(self.get_success_url())
+
+    def get_success_url(self):
+        return reverse(
+            "tracking:template-update",
+            kwargs={"pk": self.object.template_id},
+        )
+
+
+class TemplateExerciseCreateView(
+    OwnedGymDataMixin,
+    TemplateExerciseSaveMixin,
+    CreateView,
+):
     def get_template(self):
         if not hasattr(self, "_template"):
             self._template = get_object_or_404(
@@ -136,11 +207,9 @@ class TemplateExerciseCreateView(OwnedGymDataMixin, CreateView):
 
     def get_initial(self):
         initial = super().get_initial()
-        last_position = self.get_template().exercises.aggregate(
-            last=Max("position")
-        )["last"]
-
-        initial["position"] = (last_position or 0) + 1
+        initial["position"] = (
+            self.get_template().exercises.count() + 1
+        )
         return initial
 
     def get_context_data(self, **kwargs):
@@ -148,22 +217,18 @@ class TemplateExerciseCreateView(OwnedGymDataMixin, CreateView):
         context["template"] = self.get_template()
         return context
 
-    def get_success_url(self):
-        return reverse(
-            "tracking:routine-detail",
-            kwargs={"pk": self.get_template().routine_id},
-        )
 
-
-class TemplateExerciseUpdateView(OwnedGymDataMixin, UpdateView):
-    model = TemplateExercise
-    form_class = TemplateExerciseForm
-    template_name = "tracking/template_exercise_form.html"
-
+class TemplateExerciseUpdateView(
+    OwnedGymDataMixin,
+    TemplateExerciseSaveMixin,
+    UpdateView,
+):
     def get_queryset(self):
-        return TemplateExercise.objects.filter(
-            template__routine__user=self.request.user
-        ).select_related("template__routine")
+        return (
+            TemplateExercise.objects
+            .filter(template__routine__user=self.request.user)
+            .select_related("template__routine")
+        )
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -175,9 +240,3 @@ class TemplateExerciseUpdateView(OwnedGymDataMixin, UpdateView):
         context = super().get_context_data(**kwargs)
         context["template"] = self.object.template
         return context
-
-    def get_success_url(self):
-        return reverse(
-            "tracking:routine-detail",
-            kwargs={"pk": self.object.template.routine_id},
-        )

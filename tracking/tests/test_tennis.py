@@ -30,7 +30,7 @@ class TennisSessionAccessTests(TestCase):
 
                 self.assertEqual(response.status_code, 302)
                 self.assertTrue(
-                    response.url.startswith("/admin/login/")
+                    response.url.startswith("/account/login/")
                 )
 
     def test_owner_can_see_their_session(self):
@@ -94,7 +94,7 @@ class TennisSessionAccessTests(TestCase):
 
         self.assertEqual(response.status_code, 302)
         self.assertTrue(
-            response.url.startswith("/admin/login/")
+            response.url.startswith("/account/login/")
         )
         self.assertTrue(
             TennisSession.objects.filter(

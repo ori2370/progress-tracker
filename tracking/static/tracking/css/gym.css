@@ -37,3 +37,136 @@
 .video-result h3 {
     margin-top: 0.75rem;
 }
+
+.template-exercise-scroll {
+    max-height: 22rem;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+    padding-right: 0.75rem;
+}
+
+.template-exercise-preview {
+    padding-block: 0.75rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.template-exercise-preview:last-child {
+    border-bottom: 0;
+}
+
+.template-exercise-preview h3 {
+    margin: 0 0 0.4rem;
+}
+
+.template-exercise-preview p {
+    margin: 0;
+}
+
+.template-card-actions {
+    margin-top: 1rem;
+}
+
+.template-editor {
+    margin-top: 1rem;
+}
+
+.exercise-order-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.exercise-order-controls button {
+    min-width: 44px;
+    min-height: 44px;
+}
+
+.drag-handle {
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+}
+
+.drag-handle:active {
+    cursor: grabbing;
+}
+
+.template-exercise-preview.is-dragging {
+    background: #e8f5ef;
+    outline: 2px solid #155e4b;
+    outline-offset: -2px;
+}
+
+.template-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.template-editor > .form-actions {
+    margin-block: 1rem;
+}
+
+.template-editor > .muted {
+    margin-block: 1rem;
+}
+
+.template-editor .template-exercise-scroll {
+    max-height: 28rem;
+    padding: 0.5rem;
+}
+
+#template-exercise-list {
+    display: grid;
+    gap: 0.875rem;
+}
+
+.template-exercise-preview.editor-exercise-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.125rem;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: #fff;
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+}
+
+.editor-exercise-description {
+    min-width: 0;
+}
+
+.editor-exercise-row h3 {
+    margin: 0 0 0.5rem;
+    line-height: 1.5;
+}
+
+.editor-exercise-row p {
+    margin: 0;
+    line-height: 1.5;
+}
+
+.editor-exercise-edit {
+    flex-shrink: 0;
+    padding: 0.625rem;
+}
+
+.editor-exercise-row:focus-visible {
+    outline: 2px solid #155e4b;
+    outline-offset: 2px;
+}
+
+.template-exercise-preview.editor-exercise-row.is-dragging {
+    background: #e8f5ef;
+    border-color: #155e4b;
+    box-shadow: 0 5px 16px rgb(0 0 0 / 12%);
+    cursor: grabbing;
+}
+#template-editor-form ~ .template-card-actions {
+    padding-inline: 1.75rem;
+}

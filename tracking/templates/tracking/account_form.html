@@ -1,0 +1,61 @@
+{% extends "tracking/base.html" %}
+
+{% block title %}{{ heading }}{% endblock %}
+
+{% block content %}
+    <header class="page-intro">
+        <h1>{{ heading }}</h1>
+
+        {% if request.resolver_match.url_name == "profile" %}
+            <p class="muted">
+                Update your account details or change your password.
+            </p>
+        {% endif %}
+    </header>
+
+    <form method="post" class="card session-form">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        {% if next %}
+            <input type="hidden" name="next" value="{{ next }}">
+        {% endif %}
+
+        {% for field in form %}
+            <div class="form-field">
+                <label for="{{ field.id_for_label }}">
+                    {{ field.label }}
+                    {% if field.field.required %}
+                        <span aria-hidden="true">*</span>
+                    {% endif %}
+                </label>
+
+                {{ field }}
+
+                {% if field.help_text %}
+                    <div class="muted">
+                        {{ field.help_text|safe }}
+                    </div>
+                {% endif %}
+
+                {{ field.errors }}
+            </div>
+        {% endfor %}
+
+        <div class="form-actions">
+            <button type="submit">{{ submit_label }}</button>
+
+            {% if request.resolver_match.url_name == "profile" %}
+                <a class="button secondary"
+                   href="{% url 'tracking:password-change' %}">
+                    Change password
+                </a>
+            {% elif user.is_authenticated %}
+                <a class="button secondary"
+                   href="{% url 'tracking:profile' %}">
+                    Back to profile
+                </a>
+            {% endif %}
+        </div>
+    </form>
+{% endblock %}

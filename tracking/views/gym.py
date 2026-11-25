@@ -13,7 +13,7 @@ from django.shortcuts import get_object_or_404
 from ..forms.gym import GymExerciseForm
 
 class OwnedGymDataMixin(LoginRequiredMixin):
-    login_url = "/admin/login/"
+    login_url = "/account/login/"
 
     def get_queryset(self):
         return super().get_queryset().filter(user=self.request.user)

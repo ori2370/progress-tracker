@@ -1,0 +1,55 @@
+{% extends "tracking/base.html" %}
+
+{% block title %}Home | Progress Tracker{% endblock %}
+
+{% block content %}
+    <header class="page-intro">
+        <h1>
+            Welcome, {{ user.first_name|default:user.username }}
+        </h1>
+        <p class="muted">What would you like to track today?</p>
+    </header>
+
+    <div class="session-list">
+        <article class="card">
+            <h2>Gym</h2>
+            <p class="muted">
+                Record a workout, manage your routines, or track measurements.
+            </p>
+
+            <div class="form-actions">
+                <a class="button"
+                   href="{% url 'tracking:gym-workout-create' %}">
+                    New workout
+                </a>
+                <a class="button secondary"
+                   href="{% url 'tracking:gym-workout-list' %}">
+                    Gym overview
+                </a>
+            </div>
+        </article>
+
+        <article class="card">
+            <h2>Tennis</h2>
+            <p class="muted">
+                Record your sessions and review your training focus.
+            </p>
+
+            <div class="form-actions">
+                <a class="button"
+                   href="{% url 'tracking:tennis-create' %}">
+                    New session
+                </a>
+                <a class="button secondary"
+                   href="{% url 'tracking:tennis-list' %}">
+                    Tennis overview
+                </a>
+            </div>
+        </article>
+
+        <article class="card">
+            <h2>Posture</h2>
+            <p class="muted">Coming soon.</p>
+        </article>
+    </div>
+{% endblock %}

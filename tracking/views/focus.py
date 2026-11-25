@@ -9,7 +9,7 @@ from ..models import TennisFocus
 
 
 class OwnedTennisFocusMixin(LoginRequiredMixin):
-    login_url = "/admin/login/"
+    login_url = "/account/login/"
 
     def get_queryset(self):
         return super().get_queryset().filter(user=self.request.user)

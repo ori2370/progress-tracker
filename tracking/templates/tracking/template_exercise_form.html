@@ -1,35 +1,60 @@
 {% extends "tracking/base.html" %}
+{% load static %}
 
 {% block title %}Template Exercise{% endblock %}
 
 {% block content %}
     <header class="page-intro">
-        <h1>{% if object %}Edit exercise{% else %}Add exercise{% endif %}</h1>
-        <p class="muted">{{ template.routine.name }} · {{ template.name }}</p>
+        <h1>
+            {% if object %}
+                Edit exercise
+            {% else %}
+                Add exercise
+            {% endif %}
+        </h1>
         <p class="muted">
-            Choose a saved exercise to share its history across workouts.
+            {{ template.routine.name }} · {{ template.name }}
         </p>
     </header>
 
-    <form method="post" class="card session-form">
+    <form method="post"
+          id="template-exercise-form"
+          class="card session-form">
         {% csrf_token %}
         {{ form.non_field_errors }}
 
         <p class="muted">* Required</p>
 
         {% for field in form %}
-            <div class="form-field">
+            <div class="form-field"
+                 data-field="{{ field.name }}">
                 <label for="{{ field.id_for_label }}">
-                    {{ field.label }}{% if field.field.required %}<span aria-hidden="true"> *</span>{% endif %}
+                    {{ field.label }}
+                    {% if field.field.required %}
+                        <span aria-hidden="true">*</span>
+                    {% endif %}
                 </label>
+
                 {{ field }}
+
+                {% if field.help_text %}
+                    <p class="muted">{{ field.help_text }}</p>
+                {% endif %}
+
                 {{ field.errors }}
             </div>
         {% endfor %}
 
         <p class="muted">
+            Targets are optional. They describe your plan;
+            actual performance is recorded during the workout.
+        </p>
+
+        <p class="muted">
             Exercise missing?
-            <a href="{% url 'tracking:exercise-create' %}" target="_blank" rel="noopener">
+            <a href="{% url 'tracking:exercise-create' %}"
+               target="_blank"
+               rel="noopener noreferrer">
                 Add it to your library
             </a>,
             then refresh this page before filling the form.
@@ -37,10 +62,16 @@
 
         <div class="form-actions">
             <button type="submit">Save exercise</button>
+
             <a class="button secondary"
-               href="{% url 'tracking:routine-detail' template.routine_id %}">
+               href="{% url 'tracking:template-update' template.pk %}">
                 Cancel
             </a>
         </div>
     </form>
+{% endblock %}
+
+{% block scripts %}
+    {{ block.super }}
+    <script src="{% static 'tracking/template_exercise_form.js' %}" defer></script>
 {% endblock %}
