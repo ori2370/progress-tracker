@@ -1,0 +1,120 @@
+{% extends "tracking/base.html" %}
+
+{% block title %}Exercise catalog{% endblock %}
+
+{% block content %}
+    <header class="page-intro">
+        <h1>Exercise catalog</h1>
+        <p class="muted">
+            Browse exercise descriptions from Free Exercise DB.
+        </p>
+    </header>
+
+    <form method="get" class="filter-form">
+        <div class="form-field">
+            <label for="catalog-search">Exercise name</label>
+            <input
+                type="search"
+                id="catalog-search"
+                name="q"
+                value="{{ search }}"
+                placeholder="Search exercises"
+            >
+        </div>
+
+        <div class="form-field">
+            <label for="catalog-equipment">Equipment</label>
+            <select id="catalog-equipment" name="equipment">
+                <option value="">All equipment</option>
+                {% for equipment in equipment_options %}
+                    <option value="{{ equipment }}"
+                        {% if equipment == selected_equipment %}
+                            selected
+                        {% endif %}>
+                        {{ equipment|capfirst }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button type="submit">Search</button>
+    </form>
+
+    <p class="muted">
+        {{ paginator.count }} exercise{{ paginator.count|pluralize }} found.
+    </p>
+
+    <div class="session-list">
+        {% for exercise in exercises %}
+            <article class="card">
+                <h2>{{ exercise.name }}</h2>
+
+                <p class="muted">
+                    {{ exercise.category|capfirst }}
+                    · {{ exercise.level|capfirst }}
+                    {% if exercise.equipment %}
+                        · {{ exercise.equipment|capfirst }}
+                    {% endif %}
+                </p>
+
+                {% if exercise.primary_muscles %}
+                    <p>
+                        <strong>Primary muscles:</strong>
+                        {{ exercise.primary_muscles|join:", " }}
+                    </p>
+                {% endif %}
+
+                {% if exercise.instructions %}
+                    <details>
+                        <summary>Instructions</summary>
+                        <ol>
+                            {% for instruction in exercise.instructions %}
+                                <li>{{ instruction }}</li>
+                            {% endfor %}
+                        </ol>
+                    </details>
+                {% endif %}
+                <p>
+                    <a class="button"
+                       href="{% url 'tracking:exercise-create' %}?catalog={{ exercise.pk }}">
+                        Add to my library
+                    </a>
+                </p>
+            </article>
+        {% empty %}
+            <div class="card">
+                <p>No exercises match your search.</p>
+            </div>
+        {% endfor %}
+    </div>
+
+    {% if is_paginated %}
+        <nav class="form-actions" aria-label="Catalog pages">
+            {% if page_obj.has_previous %}
+                <a class="button secondary"
+                   href="?{{ filter_query }}&amp;page={{ page_obj.previous_page_number }}">
+                    Previous
+                </a>
+            {% endif %}
+
+            <span>
+                Page {{ page_obj.number }} of {{ paginator.num_pages }}
+            </span>
+
+            {% if page_obj.has_next %}
+                <a class="button secondary"
+                   href="?{{ filter_query }}&amp;page={{ page_obj.next_page_number }}">
+                    Next
+                </a>
+            {% endif %}
+        </nav>
+    {% endif %}
+
+    <p class="muted">
+        Source:
+        <a href="https://github.com/yuhonas/free-exercise-db">
+            Free Exercise DB
+        </a>
+        · Unlicense
+    </p>
+{% endblock %}

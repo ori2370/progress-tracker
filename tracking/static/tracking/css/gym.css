@@ -1,0 +1,39 @@
+.exercise-video-link {
+    margin-bottom: 1rem;
+}
+
+.video-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    border: 1px solid var(--border);
+    border-radius: 0.6rem;
+    background: var(--surface);
+}
+
+.video-link:hover {
+    background: var(--background);
+}
+
+.video-picker {
+    margin-top: 0.75rem;
+}
+
+.video-results {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+    gap: 1rem;
+}
+
+.video-result img {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    border-radius: 0.5rem;
+}
+
+.video-result h3 {
+    margin-top: 0.75rem;
+}

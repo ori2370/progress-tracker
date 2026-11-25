@@ -183,6 +183,10 @@ class ExerciseDefinition(models.Model):
         help_text="Identify the machine or equipment when relevant.",
     )
     notes = models.TextField(blank=True)
+    video_url = models.URLField(
+        max_length=500,
+        blank=True,
+    )
     goal_weight_kg = models.DecimalField(
         max_digits=6,
         decimal_places=2,

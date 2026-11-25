@@ -150,3 +150,4 @@ MEDIA_ROOT = BASE_DIR / "media"
 # Default primary key
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY", "")

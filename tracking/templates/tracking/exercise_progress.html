@@ -1,3 +1,23 @@
+{% if exercise_definition.video_url %}
+    <div class="exercise-video-link">
+        <a class="video-link"
+           href="{{ exercise_definition.video_url }}"
+           target="_blank"
+           rel="noopener noreferrer"
+           aria-label="Watch exercise demonstration on YouTube (opens in a new tab)"
+           title="Watch demonstration on YouTube">
+            <svg xmlns="http://www.w3.org/2000/svg"
+                 width="28"
+                 height="20"
+                 viewBox="0 0 28 20"
+                 aria-hidden="true"
+                 focusable="false">
+                <rect width="28" height="20" rx="5" fill="#c00"/>
+                <path d="M11 5.5 19 10 11 14.5Z" fill="#fff"/>
+            </svg>
+        </a>
+    </div>
+{% endif %}
 <section class="session-list" aria-label="Exercise progress">
     <article class="card">
         <h2>Previous performance</h2>

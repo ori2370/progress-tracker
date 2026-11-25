@@ -7,6 +7,7 @@
     <title>{% block title %}Progress Tracker{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'tracking/css/base.css' %}">
     <link rel="stylesheet" href="{% static 'tracking/css/tennis.css' %}">
+    <link rel="stylesheet" href="{% static 'tracking/css/gym.css' %}">
 </head>
 <body>
     <header class="site-header">
@@ -59,6 +60,9 @@
                 </a>
                 <a href="{% url 'tracking:exercise-list' %}">
                     Exercise library
+                </a>
+                <a href="{% url 'tracking:exercise-catalog' %}">
+                    Exercise catalog
                 </a>
                 <a href="{% url 'tracking:measurement-list' %}">
                     Measurements

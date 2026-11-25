@@ -1,4 +1,5 @@
 {% extends "tracking/base.html" %}
+{% load static %}
 
 {% block title %}Exercise Library{% endblock %}
 
@@ -10,7 +11,9 @@
         </p>
     </header>
 
-    <form method="post" class="card session-form">
+    <form method="post"
+          id="exercise-form"
+          class="card session-form">
         {% csrf_token %}
         {{ form.non_field_errors }}
 
@@ -23,6 +26,36 @@
                 </label>
 
                 {{ field }}
+
+                {% if field.name == "video_url" %}
+                    {% if object %}
+                        <div class="video-picker">
+                            <button type="button"
+                                    class="button secondary"
+                                    id="find-videos"
+                                    data-search-url="{% url 'tracking:exercise-video-search' object.pk %}">
+                                Find demonstration
+                            </button>
+
+                            <p class="muted">
+                                Searches using the saved exercise name.
+                                Choosing a video also saves your other edits.
+                            </p>
+
+                            <p id="video-search-status"
+                               role="status"
+                               aria-live="polite"></p>
+
+                            <div id="video-results"
+                                 class="video-results"></div>
+                        </div>
+                    {% else %}
+                        <p class="muted">
+                            Save this exercise first to search for videos,
+                            or paste a YouTube link now.
+                        </p>
+                    {% endif %}
+                {% endif %}
 
                 {% if field.help_text %}
                     <p class="muted">{{ field.help_text }}</p>
@@ -45,4 +78,9 @@
             </a>
         </div>
     </form>
+{% endblock %}
+
+{% block scripts %}
+    {{ block.super }}
+    <script src="{% static 'tracking/exercise_form.js' %}" defer></script>
 {% endblock %}

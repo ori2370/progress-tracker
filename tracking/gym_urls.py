@@ -1,4 +1,6 @@
 from django.urls import path
+from .views.videos import ExerciseVideoSearchView
+from .views.catalog import ExerciseCatalogListView
 from .views.routines import (
     WorkoutRoutineCreateView,
     WorkoutRoutineListView,
@@ -140,5 +142,15 @@ urlpatterns = [
         "workouts/<int:pk>/delete/",
         GymWorkoutDeleteView.as_view(),
         name="gym-workout-delete",
+    ),
+        path(
+        "catalog/",
+        ExerciseCatalogListView.as_view(),
+        name="exercise-catalog",
+    ),
+        path(
+        "exercises/<int:pk>/videos/search/",
+        ExerciseVideoSearchView.as_view(),
+        name="exercise-video-search",
     ),
 ]
