@@ -164,6 +164,13 @@ class ExerciseDefinition(models.Model):
         on_delete=models.CASCADE,
         related_name="exercise_definitions",
     )
+    catalog_exercise = models.ForeignKey(
+        "CatalogExercise",
+        on_delete=models.SET_NULL,
+        related_name="personal_exercises",
+        blank=True,
+        null=True,
+    )
     name = models.CharField(max_length=150)
     tracking_mode = models.CharField(
         max_length=10,
@@ -176,6 +183,10 @@ class ExerciseDefinition(models.Model):
         help_text="Identify the machine or equipment when relevant.",
     )
     notes = models.TextField(blank=True)
+    video_url = models.URLField(
+        max_length=500,
+        blank=True,
+    )
     goal_weight_kg = models.DecimalField(
         max_digits=6,
         decimal_places=2,
@@ -615,3 +626,21 @@ class TemplateExercise(models.Model):
 
     def __str__(self):
         return f"{self.template}: {self.definition}"
+
+
+
+class CatalogExercise(models.Model):
+    source_id = models.CharField(max_length=200, unique=True)
+    name = models.CharField(max_length=200)
+    equipment = models.CharField(max_length=100, blank=True)
+    category = models.CharField(max_length=100)
+    level = models.CharField(max_length=50)
+    primary_muscles = models.JSONField(default=list, blank=True)
+    secondary_muscles = models.JSONField(default=list, blank=True)
+    instructions = models.JSONField(default=list, blank=True)
+
+    class Meta:
+        ordering = ["name", "source_id"]
+
+    def __str__(self):
+        return self.name

@@ -8,7 +8,7 @@ from django.utils import timezone
 from django.views.generic import CreateView, ListView, UpdateView, DetailView,TemplateView,DeleteView
 
 from ..forms.gym import BodyMeasurementForm, GymWorkoutForm,ExerciseDefinitionForm
-from ..models import BodyMeasurement, ExerciseTrackingMode, GymWorkout,ExerciseDefinition,GymExercise,WorkoutTemplate
+from ..models import BodyMeasurement, ExerciseTrackingMode, GymWorkout,ExerciseDefinition,GymExercise,WorkoutTemplate,CatalogExercise
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from ..forms.gym import GymExerciseForm
@@ -156,7 +156,50 @@ class ExerciseDefinitionCreateView(
     ExerciseDefinitionFormMixin,
     CreateView,
 ):
-    pass
+    def get_catalog_exercise(self):
+        catalog_id = self.request.GET.get("catalog")
+
+        if not catalog_id:
+            return None
+
+        if not hasattr(self, "_catalog_exercise"):
+            self._catalog_exercise = get_object_or_404(
+                CatalogExercise,
+                pk=catalog_id,
+            )
+
+        return self._catalog_exercise
+
+    def get_initial(self):
+        initial = super().get_initial()
+        catalog = self.get_catalog_exercise()
+
+        if catalog:
+            initial.update({
+                "name": catalog.name,
+                "equipment": catalog.equipment,
+            })
+
+        return initial
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        catalog = self.get_catalog_exercise()
+
+        if catalog:
+            instance = self.model(
+                user=self.request.user,
+                catalog_exercise=catalog,
+            )
+            kwargs["instance"] = instance
+
+        return kwargs
+
+    def get_success_url(self):
+        return reverse(
+            "tracking:exercise-update",
+            kwargs={"pk": self.object.pk},
+        )
 
 
 class ExerciseDefinitionUpdateView(
@@ -164,8 +207,14 @@ class ExerciseDefinitionUpdateView(
     ExerciseDefinitionFormMixin,
     UpdateView,
 ):
-    pass
+    def get_success_url(self):
+        if self.request.POST.get("stay_on_form") == "1":
+            return reverse(
+                "tracking:exercise-update",
+                kwargs={"pk": self.object.pk},
+            )
 
+        return super().get_success_url()
 
 class GymWorkoutDetailView(OwnedGymDataMixin, DetailView):
     model = GymWorkout

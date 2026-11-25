@@ -1,6 +1,7 @@
 from django import forms
 from django.utils import timezone
-
+import re
+from urllib.parse import parse_qs, urlsplit
 from ..models import BodyMeasurement, GymWorkout,ExerciseDefinition,GymSet,GymExercise,ExerciseTrackingMode
 
 class BodyMeasurementForm(forms.ModelForm):
@@ -57,6 +58,7 @@ class ExerciseDefinitionForm(forms.ModelForm):
             "tracking_mode",
             "equipment",
             "notes",
+            "video_url",
             "goal_weight_kg",
             "goal_reps",
         ]
@@ -64,6 +66,7 @@ class ExerciseDefinitionForm(forms.ModelForm):
             "name": "Exercise name",
             "tracking_mode": "Log using",
             "equipment": "Equipment / machine",
+            "video_url": "YouTube demonstration",
             "goal_weight_kg": "Goal weight (kg)",
             "goal_reps": "Goal reps",
         }
@@ -72,6 +75,9 @@ class ExerciseDefinitionForm(forms.ModelForm):
         }
         widgets = {
             "notes": forms.Textarea(attrs={"rows": 3}),
+            "video_url": forms.URLInput(
+                attrs={"placeholder": "https://www.youtube.com/watch?v=..."}
+            ),
             "goal_weight_kg": forms.NumberInput(
                 attrs={"min": "0", "step": "0.25"}
             ),
@@ -81,6 +87,80 @@ class ExerciseDefinitionForm(forms.ModelForm):
     def __init__(self, *args, user, **kwargs):
         super().__init__(*args, **kwargs)
         self.instance.user = user
+
+    def clean_video_url(self):
+        value = self.cleaned_data.get("video_url", "").strip()
+
+        if not value:
+            return ""
+
+        try:
+            parsed = urlsplit(value)
+            hostname = (parsed.hostname or "").lower()
+
+            if (
+                parsed.scheme != "https"
+                or parsed.username is not None
+                or parsed.password is not None
+                or parsed.port not in (None, 443)
+            ):
+                raise ValueError
+
+            video_id = ""
+
+            if hostname in {"youtu.be", "www.youtu.be"}:
+                video_id = parsed.path.strip("/")
+            elif hostname in {
+                "youtube.com",
+                "www.youtube.com",
+                "m.youtube.com",
+            }:
+                if parsed.path == "/watch":
+                    video_id = parse_qs(parsed.query).get("v", [""])[0]
+                else:
+                    parts = parsed.path.strip("/").split("/")
+                    if len(parts) == 2 and parts[0] in {
+                        "shorts",
+                        "embed",
+                        "live",
+                    }:
+                        video_id = parts[1]
+
+            if not re.fullmatch(r"[A-Za-z0-9_-]{11}", video_id):
+                raise ValueError
+
+        except ValueError:
+            raise forms.ValidationError(
+                "Enter an HTTPS YouTube video link."
+            )
+
+        return f"https://www.youtube.com/watch?v={video_id}"
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        name = cleaned_data.get("name")
+        equipment = cleaned_data.get("equipment")
+
+        if name and equipment is not None:
+            duplicates = ExerciseDefinition.objects.filter(
+                user=self.instance.user,
+                name=name,
+                equipment=equipment,
+            )
+
+            if self.instance.pk:
+                duplicates = duplicates.exclude(pk=self.instance.pk)
+
+            if duplicates.exists():
+                self.add_error(
+                    "name",
+                    "This exercise and equipment combination is already "
+                    "in your library. Edit the existing entry or use "
+                    "different equipment.",
+                )
+
+        return cleaned_data
 
 class GymSetForm(forms.ModelForm):
     minutes = forms.IntegerField(

@@ -107,6 +107,7 @@ for endpoint in \
     /health/ready/ \
     /admin/login/ \
     /static/tracking/css/base.css \
+    /static/tracking/css/gym.css \
     /static/tracking/css/tennis.css; do
 
     curl --fail --show-error --silent --max-time 5 \
