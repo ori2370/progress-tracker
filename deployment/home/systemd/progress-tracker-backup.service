@@ -1,0 +1,14 @@
+[Unit]
+Description=Encrypted Progress Tracker database backup
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+User=DEPLOY_USER
+WorkingDirectory=/home/DEPLOY_USER/apps/progress-tracker
+EnvironmentFile=/home/DEPLOY_USER/.config/progress-tracker/home.env
+UMask=0077
+TimeoutStartSec=10min
+ExecStart=/usr/bin/flock -n /home/DEPLOY_USER/.config/progress-tracker/backup.lock /bin/bash /home/DEPLOY_USER/apps/progress-tracker/deployment/backup.sh /home/DEPLOY_USER/apps/progress-tracker/deployment/compose.yml /home/DEPLOY_USER/.config/progress-tracker/backup-recipient.txt /home/DEPLOY_USER/.local/share/progress-tracker/backups
+ExecStartPost=/usr/bin/find /home/DEPLOY_USER/.local/share/progress-tracker/backups -maxdepth 1 -type f -name database-*.dump.age -mtime +13 -delete
