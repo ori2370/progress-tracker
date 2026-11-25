@@ -587,6 +587,11 @@ class TemplateExercise(models.Model):
         null=True,
         validators=[MinValueValidator(1)],
     )
+    target_duration_seconds = models.PositiveIntegerField(
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(1)],
+    )
 
     class Meta:
         ordering = ["position", "pk"]
@@ -610,24 +615,57 @@ class TemplateExercise(models.Model):
                 ),
                 name="template_exercise_positive_reps",
             ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(target_duration_seconds__isnull=True)
+                    | models.Q(target_duration_seconds__gte=1)
+                ),
+                name="template_exercise_positive_duration",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(target_reps__isnull=True)
+                    | models.Q(target_duration_seconds__isnull=True)
+                ),
+                name="template_exercise_one_target_type",
+            ),
         ]
 
     def clean(self):
         super().clean()
 
         if self.definition_id and self.template_id:
-            if (
-                self.definition.user_id
-                != self.template.routine.user_id
-            ):
+            if self.definition.user_id != self.template.routine.user_id:
                 raise ValidationError({
                     "definition": "Choose an exercise from your own library."
                 })
 
+            if self.definition.tracking_mode == ExerciseTrackingMode.DURATION:
+                if self.target_reps is not None:
+                    raise ValidationError({
+                        "target_reps": "Duration exercises do not use target reps."
+                    })
+            elif self.target_duration_seconds is not None:
+                raise ValidationError({
+                    "target_duration_seconds":
+                        "Strength exercises use target reps instead."
+                })
+
+    @property
+    def target_duration_display(self):
+        if self.target_duration_seconds is None:
+            return ""
+
+        minutes, seconds = divmod(self.target_duration_seconds, 60)
+
+        if minutes and seconds:
+            return f"{minutes} min {seconds} sec"
+        if minutes:
+            return f"{minutes} min"
+        return f"{seconds} sec"
+
     def __str__(self):
         return f"{self.template}: {self.definition}"
-
-
 
 class CatalogExercise(models.Model):
     source_id = models.CharField(max_length=200, unique=True)

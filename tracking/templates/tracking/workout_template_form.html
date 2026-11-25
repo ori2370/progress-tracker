@@ -1,16 +1,23 @@
 {% extends "tracking/base.html" %}
+{% load static %}
 
 {% block title %}Workout Template{% endblock %}
 
 {% block content %}
     <header class="page-intro">
-        <h1>{% if object %}Edit template{% else %}New template{% endif %}</h1>
-        <p class="muted">
-            {{ routine.name }} · For example: FBW A or FBW B.
-        </p>
+        <h1>
+            {% if object %}
+                Edit {{ object.name }}
+            {% else %}
+                New template
+            {% endif %}
+        </h1>
+        <p class="muted">{{ routine.name }}</p>
     </header>
 
-    <form method="post" class="card session-form">
+    <form method="post"
+          id="template-editor-form"
+          class="card session-form">
         {% csrf_token %}
         {{ form.non_field_errors }}
 
@@ -19,7 +26,10 @@
         {% for field in form %}
             <div class="form-field">
                 <label for="{{ field.id_for_label }}">
-                    {{ field.label }}{% if field.field.required %}<span aria-hidden="true"> *</span>{% endif %}
+                    {{ field.label }}
+                    {% if field.field.required %}
+                        <span aria-hidden="true">*</span>
+                    {% endif %}
                 </label>
 
                 {{ field }}
@@ -31,13 +41,94 @@
                 {{ field.errors }}
             </div>
         {% endfor %}
-
-        <div class="form-actions">
-            <button type="submit">Save template</button>
-            <a class="button secondary"
-               href="{% url 'tracking:routine-detail' routine.pk %}">
-                Cancel
-            </a>
-        </div>
     </form>
+
+    {% if object %}
+        <section class="card template-editor"
+                 aria-labelledby="template-exercises-heading">
+            <h2 id="template-exercises-heading">Exercises</h2>
+
+            <div class="form-actions">
+                <a class="button"
+                   href="{% url 'tracking:template-exercise-create' object.pk %}">
+                    Add exercise
+                </a>
+            </div>
+
+            <p class="muted">
+                Hold an exercise to drag it into position.
+                Save changes to keep the new order.
+                With a keyboard, focus an exercise and use Alt + ↑ or ↓.
+            </p>
+
+            <p id="order-status"
+               class="muted"
+               role="status"
+               aria-live="polite"></p>
+
+            <div class="template-exercise-scroll"
+                 role="region"
+                 aria-labelledby="template-exercises-heading"
+                 tabindex="0">
+                <div id="template-exercise-list">
+                    {% for entry in template_exercises %}
+                        <article class="template-exercise-preview editor-exercise-row"
+                                 data-exercise-row
+                                 tabindex="0"
+                                 aria-label="{{ entry.definition }}. Hold to drag, or use Alt and the arrow keys to reorder.">
+                            <input type="hidden"
+                                   name="exercise_order"
+                                   value="{{ entry.pk }}"
+                                   form="template-editor-form">
+
+                            <div class="editor-exercise-description">
+                                <h3>
+                                    <span data-position>{{ forloop.counter }}</span>.
+                                    {{ entry.definition }}
+                                </h3>
+
+                                <p>
+                                    {% if entry.definition.tracking_mode == "duration" %}
+                                        {{ entry.planned_sets }} round{{ entry.planned_sets|pluralize }}
+                                        {% if entry.target_duration_seconds %}
+                                            × {{ entry.target_duration_display }}
+                                        {% else %}
+                                            · No duration target
+                                        {% endif %}
+                                    {% else %}
+                                        {{ entry.planned_sets }} set{{ entry.planned_sets|pluralize }}
+                                        {% if entry.target_reps %}
+                                            × {{ entry.target_reps }} reps
+                                        {% endif %}
+                                    {% endif %}
+                                </p>
+                            </div>
+
+                            <a class="editor-exercise-edit"
+                               href="{% url 'tracking:template-exercise-update' entry.pk %}">
+                                Edit
+                            </a>
+                        </article>
+                    {% empty %}
+                        <p class="muted">No exercises added yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+    {% endif %}
+
+    <div class="form-actions template-card-actions">
+        <button type="submit" form="template-editor-form">
+            {% if object %}
+                Save changes
+            {% else %}
+                Create template
+            {% endif %}
+        </button>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    {{ block.super }}
+    <script src="{% static 'tracking/template_editor.js' %}" defer></script>
 {% endblock %}

@@ -74,7 +74,7 @@ def search_exercise_videos(exercise_name):
     if not settings.YOUTUBE_API_KEY:
         raise YouTubeSearchError("Video search is not configured.")
 
-    query = f"{exercise_name.strip()} exercise technique"
+    query = f"{exercise_name.strip()} gym exercise technique"
     query_hash = hashlib.sha256(query.encode()).hexdigest()
     cache_key = f"youtube-search:v3:{query_hash}"
 
