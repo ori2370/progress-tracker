@@ -42,7 +42,7 @@ class BodyMeasurementTests(TestCase):
             with self.subTest(url=url):
                 response = self.client.get(url)
                 self.assertEqual(response.status_code, 302)
-                self.assertTrue(response.url.startswith("/admin/login/"))
+                self.assertTrue(response.url.startswith("/account/login/"))
 
     def test_weight_or_waist_can_be_recorded_independently(self):
         for values in [

@@ -1,0 +1,32 @@
+{% if user.is_authenticated %}
+    <details class="profile-menu">
+        <summary class="profile-avatar"
+                 aria-label="Open account options"
+                 title="My account">
+            {{ user.first_name|default:user.username|slice:":1"|upper }}
+        </summary>
+
+        <div class="profile-dropdown">
+            <p class="profile-menu-name">
+                {{ user.get_full_name|default:user.username }}
+            </p>
+
+            <a href="{% url 'tracking:profile' %}">
+                My profile
+            </a>
+
+            <a href="{% url 'tracking:password-change' %}">
+                Change password
+            </a>
+
+            <form method="post" action="{% url 'tracking:logout' %}">
+                {% csrf_token %}
+                <button type="submit">Log out</button>
+            </form>
+        </div>
+    </details>
+{% else %}
+    <a class="button secondary" href="{% url 'tracking:login' %}">
+        Log in
+    </a>
+{% endif %}

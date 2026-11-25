@@ -5,7 +5,7 @@ from tracking.models import CatalogExercise
 
 
 class ExerciseCatalogListView(LoginRequiredMixin, ListView):
-    login_url = "/admin/login/"
+    login_url = "/account/login/"
     model = CatalogExercise
     template_name = "tracking/exercise_catalog_list.html"
     context_object_name = "exercises"

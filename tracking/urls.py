@@ -1,4 +1,5 @@
 from django.urls import include, path
+from .views.home import HomeView
 from .views.focus import (
     TennisFocusCreateView,
     TennisFocusListView,
@@ -44,4 +45,6 @@ urlpatterns = [
         name="tennis-focus-update",
     ),
     path("gym/", include("tracking.gym_urls")),
+    path("account/", include("tracking.account_urls")),
+    path("", HomeView.as_view(), name="home"),
 ]

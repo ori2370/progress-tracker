@@ -15,8 +15,9 @@
 <body>
     <header class="site-header">
         <div class="container">
-            <p class="brand">Progress Tracker</p>
-
+            <a class="brand" href="{% url 'tracking:home' %}">
+                Progress Tracker
+            </a>
             <nav aria-label="Progress sections">
                 <a href="{% url 'tracking:tennis-list' %}"
                    {% if request.path|slice:":8" == "/tennis/" %}
@@ -30,6 +31,7 @@
                     Gym
                 </a>
             </nav>
+            {% include "tracking/profile_menu.html" %}
         </div>
     </header>
 
@@ -54,27 +56,48 @@
         {% endwith %}
         {% endif %}
         {% if request.path|slice:":5" == "/gym/" %}
-            <nav class="section-nav" aria-label="Gym pages">
-                <a href="{% url 'tracking:gym-workout-list' %}">
-                    Workouts
-                </a>
-                <a href="{% url 'tracking:routine-list' %}">
-                    My routines
-                </a>
-                <a href="{% url 'tracking:exercise-list' %}">
-                    Exercise library
-                </a>
-                <a href="{% url 'tracking:exercise-catalog' %}">
-                    Exercise catalog
-                </a>
-                <a href="{% url 'tracking:measurement-list' %}">
-                    Measurements
-                </a>
-            </nav>
+            {% with page=request.resolver_match.url_name %}
+                <nav class="section-nav" aria-label="Gym pages">
+                    <a href="{% url 'tracking:gym-workout-list' %}"
+                       {% if page == "gym-workout-list" or page == "gym-workout-create" or page == "gym-workout-blank" or page == "gym-workout-detail" or page == "gym-workout-start" or page == "gym-workout-delete" or page == "gym-exercise-create" or page == "gym-set-create" or page == "gym-set-update" %}
+                           aria-current="page"
+                       {% endif %}>
+                        Workouts
+                    </a>
+
+                    <a href="{% url 'tracking:routine-list' %}"
+                       {% if page == "routine-list" or page == "routine-create" or page == "routine-update" or page == "routine-detail" or page == "template-create" or page == "template-update" or page == "template-exercise-create" or page == "template-exercise-update" %}
+                           aria-current="page"
+                       {% endif %}>
+                        My routines
+                    </a>
+
+                    <a href="{% url 'tracking:exercise-list' %}"
+                       {% if page == "exercise-list" or page == "exercise-create" or page == "exercise-update" or page == "exercise-video-search" %}
+                           aria-current="page"
+                       {% endif %}>
+                        Exercise library
+                    </a>
+
+                    <a href="{% url 'tracking:exercise-catalog' %}"
+                       {% if page == "exercise-catalog" %}
+                           aria-current="page"
+                       {% endif %}>
+                        Exercise catalog
+                    </a>
+
+                    <a href="{% url 'tracking:measurement-list' %}"
+                       {% if page == "measurement-list" or page == "measurement-create" or page == "measurement-update" %}
+                           aria-current="page"
+                       {% endif %}>
+                        Measurements
+                    </a>
+                </nav>
+            {% endwith %}
         {% endif %}
         {% block content %}{% endblock %}
     </main>
-
+    <script src="{% static 'tracking/profile_menu.js' %}" defer></script>
     {% block scripts %}{% endblock %}
 </body>
 </html>
