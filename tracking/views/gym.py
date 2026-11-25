@@ -6,7 +6,6 @@ from django.db.models import Avg, Count, Q, Max
 from django.urls import reverse_lazy,reverse
 from django.utils import timezone
 from django.views.generic import CreateView, ListView, UpdateView, DetailView,TemplateView,DeleteView
-
 from ..forms.gym import BodyMeasurementForm, GymWorkoutForm,ExerciseDefinitionForm
 from ..models import BodyMeasurement, ExerciseTrackingMode, GymWorkout,ExerciseDefinition,GymExercise,WorkoutTemplate,CatalogExercise
 from django.db import transaction
@@ -196,10 +195,7 @@ class ExerciseDefinitionCreateView(
         return kwargs
 
     def get_success_url(self):
-        return reverse(
-            "tracking:exercise-update",
-            kwargs={"pk": self.object.pk},
-        )
+        return reverse("tracking:exercise-list")
 
 
 class ExerciseDefinitionUpdateView(
