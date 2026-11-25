@@ -239,3 +239,35 @@ Compose configuration, or systemd units require a deliberate installation.
 
 Automatic updates may briefly interrupt access. Old Docker images are not
 automatically removed; monitor disk usage and preserve recovery images.
+
+## Telegram failure notifications
+
+Private credentials belong in:
+
+    ~/.config/progress-tracker/notifications.env
+
+Use notifications.env.example as the format reference. Keep the real file
+outside Git with permissions 600.
+
+Install progress-tracker-notify@.service after replacing DEPLOY_USER with
+the server username. Reinstall the backup and update service templates to
+apply their OnFailure hooks, then run systemctl daemon-reload.
+
+Send a test notification:
+
+```bash
+sudo systemctl start progress-tracker-notify@test.service
+sudo journalctl -u progress-tracker-notify@test.service -n 20 --no-pager
+```
+
+Failed backup or update jobs trigger an alert containing the hostname,
+service name, UTC timestamp, and a command for inspecting local logs.
+Application records, credentials, and log contents are not sent.
+
+Repeated alerts for the same service are suppressed for one hour after
+successful delivery. Test notifications bypass this cooldown.
+
+Notifications require working internet access and Telegram availability.
+A powered-off server cannot report its own outage. Failed notification
+attempts are logged locally; persistent delivery retries and external
+uptime monitoring are not configured.

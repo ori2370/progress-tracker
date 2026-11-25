@@ -1,5 +1,6 @@
 [Unit]
 Description=Update Progress Tracker from its published image
+OnFailure=progress-tracker-notify@%n.service
 Requires=docker.service
 After=docker.service tailscaled.service network-online.target
 Wants=network-online.target

@@ -1,0 +1,12 @@
+[Unit]
+Description=Telegram alert for %i
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=DEPLOY_USER
+EnvironmentFile=/home/DEPLOY_USER/.config/progress-tracker/notifications.env
+ExecStart=/usr/bin/python3 /home/DEPLOY_USER/apps/progress-tracker/deployment/home/notify.py %i
+UMask=0077
+TimeoutStartSec=30s

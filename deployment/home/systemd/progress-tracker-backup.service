@@ -1,5 +1,6 @@
 [Unit]
 Description=Encrypted Progress Tracker database backup
+OnFailure=progress-tracker-notify@%n.service
 Requires=docker.service
 After=docker.service
 
