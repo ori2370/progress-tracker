@@ -1,10 +1,10 @@
 from django.urls import include, path
-from .focus_views import (
+from .views.focus import (
     TennisFocusCreateView,
     TennisFocusListView,
     TennisFocusUpdateView,
 )
-from .views import (
+from .views.tennis import (
     TennisSessionBulkDeleteView,
     TennisSessionCreateView,
     TennisSessionListView,
