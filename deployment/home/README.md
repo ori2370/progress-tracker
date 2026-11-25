@@ -182,3 +182,60 @@ may discard changes made after the backup.
     systemctl list-timers --all progress-tracker-backup.timer
 
 Do not publish rendered Compose configuration: it contains resolved secrets.
+
+
+## Automatic application updates
+
+GitHub Actions publishes the home image after Django, container, backup,
+and updater checks pass. The server checks GHCR every five minutes and
+deploys the resolved image digest.
+
+The updater creates an encrypted database backup before migrations,
+refreshes the catalog, recreates only the web service, and checks readiness.
+On success, it saves the deployed digest in the private home.env file.
+
+The first GHCR package must be made public to allow anonymous server pulls.
+The image contains application code and the catalog, not the live database
+or private server configuration.
+
+Install the update service and timer from systemd/, replacing DEPLOY_USER
+with the server username. Test the service manually before enabling its timer.
+
+Inspect updates:
+
+```bash
+sudo journalctl -u progress-tracker-update.service -n 60 --no-pager
+systemctl list-timers --all progress-tracker-update.timer
+```
+
+Pause future checks:
+
+```bash
+sudo systemctl disable --now progress-tracker-update.timer
+```
+
+Stopping the timer does not interrupt a service run already in progress.
+
+If deployment fails after migrations begin, the updater leaves this marker:
+
+```text
+~/.local/state/progress-tracker/update-blocked
+```
+
+Further attempts stop until the failure is investigated. Inspect service
+logs, container health, and migration state before removing the marker.
+
+The previous image reference is recorded in:
+
+```text
+~/.local/state/progress-tracker/previous-image
+```
+
+There is no automatic image or database rollback. An older image may be
+incompatible with the migrated database.
+
+Application updates do not run git pull. Changes to deployment scripts,
+Compose configuration, or systemd units require a deliberate installation.
+
+Automatic updates may briefly interrupt access. Old Docker images are not
+automatically removed; monitor disk usage and preserve recovery images.

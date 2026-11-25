@@ -82,6 +82,12 @@ jobs:
       - name: Run tests
         run: python manage.py test --noinput
 
+      - name: Check home deployment scripts
+        run: |
+          bash -n deployment/home/compose.sh
+          bash -n deployment/home/update.sh
+          python3 ci/test_home_update.py
+
   container:
     name: Build and verify production image
     runs-on: ubuntu-latest
@@ -208,3 +214,70 @@ jobs:
 
       - name: Deploy and wait for result
         run: python3 deployment/send-deployment.py
+
+
+  publish_home:
+    name: Publish home server image
+    runs-on: ubuntu-latest
+    needs: [test, container, backup]
+
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      github.event_name == 'push'
+
+    concurrency:
+      group: progress-tracker-home-publish
+      cancel-in-progress: false
+
+    permissions:
+      contents: read
+      packages: write
+
+    env:
+      GHCR_USER: ${{ github.actor }}
+      REPOSITORY: ${{ github.repository }}
+      COMMIT_SHA: ${{ github.sha }}
+      RUN_ID: ${{ github.run_id }}
+      RUN_ATTEMPT: ${{ github.run_attempt }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          printf '%s' "$GHCR_TOKEN" |
+            docker login ghcr.io \
+              --username "$GHCR_USER" \
+              --password-stdin
+
+      - name: Build and publish release image
+        run: |
+          IMAGE="ghcr.io/${REPOSITORY,,}"
+          RELEASE_TAG="${COMMIT_SHA}-${RUN_ID}-${RUN_ATTEMPT}"
+
+          docker build \
+            --label "org.opencontainers.image.source=https://github.com/$REPOSITORY" \
+            --label "org.opencontainers.image.revision=$COMMIT_SHA" \
+            -t "$IMAGE:$RELEASE_TAG" .
+
+          docker push "$IMAGE:$RELEASE_TAG"
+
+          CURRENT_MAIN="$(git ls-remote origin refs/heads/main | cut -f1)"
+
+          if [ "$CURRENT_MAIN" != "$COMMIT_SHA" ]; then
+            echo "A newer commit exists; leaving the home deployment tag unchanged."
+            exit 0
+          fi
+
+          docker tag "$IMAGE:$RELEASE_TAG" "$IMAGE:home"
+          docker push "$IMAGE:home"
+
+          printf '### Home server image\n\n`%s`\n' \
+            "$IMAGE:$RELEASE_TAG" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Log out of registry
+        if: always()
+        run: docker logout ghcr.io
