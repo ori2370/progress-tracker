@@ -1,7 +1,7 @@
 from django import forms
 from django.utils import timezone
 
-from .models import BodyMeasurement, GymWorkout,ExerciseDefinition,GymSet,GymExercise,ExerciseTrackingMode
+from ..models import BodyMeasurement, GymWorkout,ExerciseDefinition,GymSet,GymExercise,ExerciseTrackingMode
 
 class BodyMeasurementForm(forms.ModelForm):
     class Meta:

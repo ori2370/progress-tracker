@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import WorkoutRoutine, WorkoutTemplate, TemplateExercise, ExerciseDefinition
+from ..models import WorkoutRoutine, WorkoutTemplate, TemplateExercise, ExerciseDefinition
 
 class WorkoutRoutineForm(forms.ModelForm):
     class Meta:

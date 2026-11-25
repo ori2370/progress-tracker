@@ -1,5 +1,5 @@
 from django.urls import path
-from .routine_views import (
+from .views.routines import (
     WorkoutRoutineCreateView,
     WorkoutRoutineListView,
     WorkoutRoutineUpdateView,
@@ -9,7 +9,7 @@ from .routine_views import (
     TemplateExerciseCreateView,
     TemplateExerciseUpdateView,
 )
-from .gym_views import (
+from .views.gym import (
     BodyMeasurementCreateView,
     BodyMeasurementListView,
     BodyMeasurementUpdateView,
@@ -24,7 +24,7 @@ from .gym_views import (
     GymExerciseCreateView,
     GymWorkoutDeleteView,
 )
-from .gym_logging_views import GymSetCreateView, GymSetUpdateView
+from .views.gym_logging import GymSetCreateView, GymSetUpdateView
 urlpatterns = [
     path(
         "",

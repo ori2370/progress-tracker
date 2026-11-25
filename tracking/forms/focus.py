@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import TennisFocus
+from ..models import TennisFocus
 
 
 class TennisFocusForm(forms.ModelForm):

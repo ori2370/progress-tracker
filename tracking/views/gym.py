@@ -7,11 +7,11 @@ from django.urls import reverse_lazy,reverse
 from django.utils import timezone
 from django.views.generic import CreateView, ListView, UpdateView, DetailView,TemplateView,DeleteView
 
-from .gym_forms import BodyMeasurementForm, GymWorkoutForm,ExerciseDefinitionForm
-from .models import BodyMeasurement, ExerciseTrackingMode, GymWorkout,ExerciseDefinition,GymExercise,WorkoutTemplate
+from ..forms.gym import BodyMeasurementForm, GymWorkoutForm,ExerciseDefinitionForm
+from ..models import BodyMeasurement, ExerciseTrackingMode, GymWorkout,ExerciseDefinition,GymExercise,WorkoutTemplate
 from django.db import transaction
 from django.shortcuts import get_object_or_404
-from .gym_forms import GymExerciseForm
+from ..forms.gym import GymExerciseForm
 
 class OwnedGymDataMixin(LoginRequiredMixin):
     login_url = "/admin/login/"
