@@ -1,0 +1,10 @@
+[Unit]
+Description=Check for Progress Tracker updates every five minutes
+
+[Timer]
+OnBootSec=2min
+OnUnitInactiveSec=5min
+Unit=progress-tracker-update.service
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,13 @@
+[Unit]
+Description=Update Progress Tracker from its published image
+Requires=docker.service
+After=docker.service tailscaled.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=DEPLOY_USER
+WorkingDirectory=/home/DEPLOY_USER/apps/progress-tracker
+ExecStart=/bin/bash /home/DEPLOY_USER/apps/progress-tracker/deployment/home/update.sh
+UMask=0077
+TimeoutStartSec=15min
