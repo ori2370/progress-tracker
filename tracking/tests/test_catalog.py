@@ -185,10 +185,7 @@ class CatalogViewTests(TestCase):
         self.assertEqual(exercise.catalog_exercise, self.catalog)
         self.assertRedirects(
             response,
-            reverse(
-                "tracking:exercise-update",
-                kwargs={"pk": exercise.pk},
-            ),
+            reverse("tracking:exercise-list"),
         )
 
     def test_duplicate_personal_exercise_is_not_created(self):
