@@ -1,7 +1,7 @@
 from django import forms
 from django.forms import BaseFormSet, formset_factory
 
-from .models import TennisFocus, TennisSession
+from ..models import TennisFocus, TennisSession
 
 class TennisSessionForm(forms.ModelForm):
     set_count = forms.TypedChoiceField(

@@ -5,7 +5,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.generic import CreateView, UpdateView
 
-from .gym_forms import GymSetForm
+from .forms.gym import GymSetForm
 from .gym_views import OwnedGymDataMixin
 from .models import GymExercise, GymSet,ExerciseTrackingMode
 

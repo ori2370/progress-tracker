@@ -5,8 +5,8 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from ..focus_forms import TennisFocusForm
-from ..forms import TennisSessionForm
+from ..forms.focus import TennisFocusForm
+from ..forms.tennis import TennisSessionForm
 from ..models import TennisFocus, TennisSession
 
 
