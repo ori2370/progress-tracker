@@ -1,0 +1,8 @@
+[Unit]
+Description=Remove encrypted offsite backups older than 30 days
+
+[Service]
+Type=oneshot
+User=tracker-backup
+ExecStart=/usr/bin/find /srv/progress-tracker-backups -maxdepth 1 -type f -name database-*.dump.age -mtime +29 -print -delete
+TimeoutStartSec=1min

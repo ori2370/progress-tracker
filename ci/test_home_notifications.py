@@ -177,6 +177,15 @@ class NotificationTests(unittest.TestCase):
         self.assertIn("Stage: unavailable", message)
         self.assertIn("Inspect logs:", message)
 
+    def test_upload_failure_alert_has_separate_wording(self):
+        message = notify.build_message(
+            "progress-tracker-backup-upload.service"
+        )
+
+        self.assertIn("off-server backup upload failed", message)
+        self.assertIn("Local backups were not deleted", message)
+        self.assertIn("next scheduled transfer will retry", message)
+        self.assertNotIn("Automatic updates:", message)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,9 @@
+[Unit]
+Description=Upload encrypted backups hourly
+
+[Timer]
+OnBootSec=5min
+OnUnitInactiveSec=1h
+
+[Install]
+WantedBy=timers.target

@@ -86,8 +86,10 @@ jobs:
         run: |
           bash -n deployment/home/compose.sh
           bash -n deployment/home/update.sh
+          bash -n deployment/home/upload-backups.sh
           python3 ci/test_home_update.py
           python3 ci/test_home_notifications.py
+          python3 ci/test_backup_upload.py
 
   container:
     name: Build and verify production image

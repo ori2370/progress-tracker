@@ -15,6 +15,7 @@ ALLOWED_SERVICES = (
     "progress-tracker-update.service",
     "progress-tracker-backup.service",
     "test",
+    "progress-tracker-backup-upload.service",
 )
 
 COOLDOWN_SECONDS = 3600
@@ -105,6 +106,13 @@ def build_message(service):
     if service == "progress-tracker-update.service":
         title = "⚠️ Progress Tracker update failed"
         details = update_details()
+    elif service == "progress-tracker-backup-upload.service":
+        title = "⚠️ Progress Tracker off-server backup upload failed"
+        details = (
+            "The encrypted backup transfer to Oracle did not complete.\n"
+            "Local backups were not deleted.\n"
+            "The next scheduled transfer will retry."
+        )
     else:
         title = "⚠️ Progress Tracker scheduled backup failed"
         details = (
