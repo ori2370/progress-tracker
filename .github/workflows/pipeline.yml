@@ -90,6 +90,7 @@ jobs:
           python3 ci/test_home_update.py
           python3 ci/test_home_notifications.py
           python3 ci/test_backup_upload.py
+          python3 ci/test_external_monitor.py
 
   container:
     name: Build and verify production image
