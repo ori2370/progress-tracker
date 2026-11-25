@@ -1,0 +1,7 @@
+services:
+  web:
+    environment:
+      YOUTUBE_API_KEY: ${YOUTUBE_API_KEY:-}
+    ports: !override
+      - "127.0.0.1:${APP_PORT:-18743}:8000"
+      - "${TAILNET_IP:?TAILNET_IP must be configured}:${APP_PORT:-18743}:8000"
