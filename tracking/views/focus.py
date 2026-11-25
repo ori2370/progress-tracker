@@ -4,8 +4,8 @@ from django.urls import reverse_lazy
 from django.utils import timezone
 from django.views.generic import CreateView, ListView, UpdateView
 
-from .focus_forms import TennisFocusForm
-from .models import TennisFocus
+from ..forms.focus import TennisFocusForm
+from ..models import TennisFocus
 
 
 class OwnedTennisFocusMixin(LoginRequiredMixin):

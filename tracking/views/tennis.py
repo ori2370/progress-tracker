@@ -2,12 +2,12 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
 from django.urls import reverse_lazy
 from django.views.generic import CreateView,ListView
-from .forms import MatchSetFormSet, TennisSessionForm
-from .models import MatchSet, TennisSession
+from ..forms.tennis import MatchSetFormSet, TennisSessionForm
+from ..models import MatchSet, TennisSession
 from django.shortcuts import redirect, render
 from django.views import View
 
-from .forms import TennisSessionBulkDeleteForm
+from ..forms.tennis import TennisSessionBulkDeleteForm
 
 class TennisSessionListView(LoginRequiredMixin, ListView):
     model = TennisSession

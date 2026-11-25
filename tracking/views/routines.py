@@ -1,9 +1,9 @@
 from django.urls import reverse_lazy,reverse
 from django.views.generic import CreateView, ListView, UpdateView
 
-from .gym_views import OwnedGymDataMixin
-from .models import WorkoutRoutine,WorkoutTemplate,TemplateExercise
-from .routine_forms import WorkoutRoutineForm,WorkoutTemplateForm,TemplateExerciseForm
+from .gym import OwnedGymDataMixin
+from ..models import WorkoutRoutine,WorkoutTemplate,TemplateExercise
+from ..forms.routines import WorkoutRoutineForm,WorkoutTemplateForm,TemplateExerciseForm
 from django.shortcuts import get_object_or_404
 from django.views.generic import DetailView
 from django.db.models import Max

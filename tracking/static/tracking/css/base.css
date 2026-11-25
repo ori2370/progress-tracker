@@ -219,44 +219,6 @@ button.danger {
     margin-bottom: 1.5rem;
 }
 
-.set-row {
-    min-width: 0;
-    margin: 0 0 1rem;
-    padding: 1rem;
-    border: 1px solid var(--border);
-    border-radius: 0.75rem;
-}
-
-.set-row legend {
-    padding-inline: 0.4rem;
-    font-weight: 700;
-}
-
-.score-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.75rem;
-}
-
-.match-score {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    margin-bottom: 1rem;
-}
-
-.set-score {
-    white-space: nowrap;
-    font-size: 1.35rem;
-    font-weight: 600;
-}
-
-.set-score sup {
-    font-size: 0.65em;
-    line-height: 0;
-    vertical-align: super;
-}
-
 img {
     display: block;
     max-width: 100%;
@@ -390,62 +352,4 @@ button:disabled {
 
 .section-nav {
     margin-bottom: 1.5rem;
-}
-.focus-card-heading {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 1rem;
-}
-
-.focus-card-heading > div:first-child {
-    flex: 1 1 12rem;
-    min-width: 0;
-}
-
-.focus-progress {
-    --ring-color: #1681c4;
-
-    position: relative;
-    display: grid;
-    place-items: center;
-    flex: 0 0 auto;
-    width: 6rem;
-    height: 6rem;
-    border-radius: 50%;
-    background: conic-gradient(
-        var(--ring-color) var(--progress),
-        var(--border) 0
-    );
-}
-
-.focus-progress::before {
-    content: "";
-    position: absolute;
-    inset: 0.65rem;
-    border-radius: 50%;
-    background: var(--surface);
-}
-
-.focus-progress span {
-    position: relative;
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: var(--text);
-}
-
-.focus-progress-complete {
-    --ring-color: #237a43;
-}
-
-.focus-card-complete {
-    --surface: #f0f5f1;
-
-    border-color: #c4d8c9;
-}
-
-.focus-complete-label {
-    color: #236338;
-    font-weight: 700;
 }
