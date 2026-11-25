@@ -258,7 +258,7 @@ jobs:
           IMAGE="ghcr.io/${REPOSITORY,,}"
           RELEASE_TAG="${COMMIT_SHA}-${RUN_ID}-${RUN_ATTEMPT}"
 
-          docker build \
+          docker build --provenance=false \
             --label "org.opencontainers.image.source=https://github.com/$REPOSITORY" \
             --label "org.opencontainers.image.revision=$COMMIT_SHA" \
             -t "$IMAGE:$RELEASE_TAG" .
