@@ -24,6 +24,53 @@ if [[ -e "$STATE_DIRECTORY/update-blocked" ]]; then
     exit 1
 fi
 
+
+STAGE="configuration"
+BACKUP_STATUS="not_started"
+UPDATE_RESULT="completed"
+
+record_update_status() {
+    result=$?
+    trap - EXIT
+
+    python3 - "$STATE_DIRECTORY/update-status.json"         "$STAGE" "$BACKUP_STATUS" "$UPDATE_RESULT" "$result" <<'STATUS_PY'
+from datetime import datetime, timezone
+import json
+import os
+from pathlib import Path
+import sys
+import tempfile
+
+path = Path(sys.argv[1])
+exit_code = int(sys.argv[5])
+
+payload = {
+    "stage": sys.argv[2],
+    "backup": sys.argv[3],
+    "result": "failed" if exit_code else sys.argv[4],
+    "exit_code": exit_code,
+    "timestamp": datetime.now(timezone.utc).isoformat(),
+}
+
+fd, temporary = tempfile.mkstemp(prefix=".update-status-", dir=path.parent)
+
+try:
+    with os.fdopen(fd, "w") as file:
+        json.dump(payload, file)
+        file.write("\n")
+    os.replace(temporary, path)
+finally:
+    if os.path.exists(temporary):
+        os.unlink(temporary)
+STATUS_PY
+
+    exit "$result"
+}
+
+trap record_update_status EXIT
+trap 'exit 143' TERM
+trap 'exit 130' INT
+
 if [[ ! -s "$ENV_FILE" ]]; then
     echo "Missing private configuration: $ENV_FILE" >&2
     exit 1
@@ -40,9 +87,11 @@ compose() {
     bash "$SCRIPT_DIRECTORY/compose.sh" "$@"
 }
 
+STAGE="image_download"
 echo "Checking for a published home-server image..."
 docker pull "$UPDATE_IMAGE"
 
+STAGE="image_inspection"
 TARGET_IMAGE="$(
     docker image inspect "$UPDATE_IMAGE" \
         --format '{{range .RepoDigests}}{{println .}}{{end}}' |
@@ -70,6 +119,7 @@ TARGET_IMAGE_ID="$(
 )"
 
 if [[ "$CURRENT_IMAGE_ID" == "$TARGET_IMAGE_ID" ]]; then
+    UPDATE_RESULT="up_to_date"
     echo "Application is already up to date."
     exit 0
 fi
@@ -81,6 +131,8 @@ PREVIOUS_IMAGE="$(
 printf '%s\n' "$PREVIOUS_IMAGE" > "$STATE_DIRECTORY/previous-image"
 printf '%s\n' "$TARGET_IMAGE" > "$STATE_DIRECTORY/pending-image"
 
+STAGE="backup"
+BACKUP_STATUS="in_progress"
 echo "Creating a backup before deployment..."
 flock -w 120 "$CONFIG_DIRECTORY/backup.lock" \
     bash "$PROJECT_DIRECTORY/deployment/backup.sh" \
@@ -88,29 +140,36 @@ flock -w 120 "$CONFIG_DIRECTORY/backup.lock" \
     "$CONFIG_DIRECTORY/backup-recipient.txt" \
     "$BACKUP_DIRECTORY"
 
+BACKUP_STATUS="completed"
+STAGE="compose_validation"
 export APP_IMAGE="$TARGET_IMAGE"
 compose config --quiet
 
 # Leave this marker in place if any later command fails or is interrupted.
 printf '%s\n' "$TARGET_IMAGE" > "$STATE_DIRECTORY/update-blocked"
 
+STAGE="database_migration"
 echo "Applying database migrations..."
 compose run --rm --no-deps web \
     python manage.py migrate --noinput
 
+STAGE="catalog_import"
 echo "Refreshing the exercise catalog..."
 compose run --rm --no-deps web \
     python manage.py import_exercise_catalog \
     data/free-exercise-db/exercises.json
 
+STAGE="application_startup"
 echo "Starting the new application image..."
 compose up -d --no-deps --wait --wait-timeout 120 web
 
+STAGE="readiness_check"
 echo "Checking application readiness..."
 curl --fail --show-error --silent --max-time 10 \
     "http://127.0.0.1:${APP_PORT:-18743}/health/ready/"
 echo
 
+STAGE="saving_release"
 # Persist the successful digest without replacing other settings.
 python3 - "$ENV_FILE" "$TARGET_IMAGE" <<'PY'
 import os
@@ -153,4 +212,6 @@ PY
 printf '%s\n' "$TARGET_IMAGE" > "$STATE_DIRECTORY/current-image"
 rm -f "$STATE_DIRECTORY/update-blocked" "$STATE_DIRECTORY/pending-image"
 
+STAGE="completed"
+UPDATE_RESULT="deployed"
 echo "Deployment completed successfully: $TARGET_IMAGE"

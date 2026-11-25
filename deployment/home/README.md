@@ -260,14 +260,12 @@ sudo systemctl start progress-tracker-notify@test.service
 sudo journalctl -u progress-tracker-notify@test.service -n 20 --no-pager
 ```
 
-Failed backup or update jobs trigger an alert containing the hostname,
-service name, UTC timestamp, and a command for inspecting local logs.
-Application records, credentials, and log contents are not sent.
+Failed update jobs report the recorded deployment stage, exit code,
+pre-update backup outcome, and whether automatic updates are paused.
+Alert and failure times are displayed in Asia/Jerusalem.
 
-Repeated alerts for the same service are suppressed for one hour after
-successful delivery. Test notifications bypass this cooldown.
+Failed scheduled backups use separate wording and do not imply that the
+application is down. If detailed status is unavailable, the alert directs
+the operator to the local service logs.
 
-Notifications require working internet access and Telegram availability.
-A powered-off server cannot report its own outage. Failed notification
-attempts are logged locally; persistent delivery retries and external
-uptime monitoring are not configured.
+Application records, credentials, and raw log contents are not sent.
