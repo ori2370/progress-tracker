@@ -6,8 +6,8 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from .gym_forms import BodyMeasurementForm
-from .models import BodyMeasurement
+from ..gym_forms import BodyMeasurementForm
+from ..models import BodyMeasurement
 
 
 class BodyMeasurementTests(TestCase):
