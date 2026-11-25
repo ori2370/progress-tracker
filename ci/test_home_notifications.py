@@ -121,6 +121,63 @@ class NotificationTests(unittest.TestCase):
 
         mock_open.assert_called_once()
 
+    def test_update_message_includes_failure_details(self):
+        directory = self.home / ".local/state/progress-tracker"
+        directory.mkdir(parents=True)
+
+        (directory / "update-status.json").write_text(json.dumps({
+            "stage": "database_migration",
+            "backup": "completed",
+            "result": "failed",
+            "exit_code": 1,
+            "timestamp": "2026-11-25T15:00:00+00:00",
+        }))
+        (directory / "update-blocked").touch()
+
+        message = notify.build_message(SERVICE)
+
+        self.assertIn("Stage: Applying database migrations", message)
+        self.assertIn("Exit code: 1", message)
+        self.assertIn("Pre-update backup: Completed", message)
+        self.assertIn("Automatic updates: Paused", message)
+        self.assertIn("2026-11-25 17:00", message)
+
+    def test_successful_status_is_not_presented_as_failure_details(self):
+        directory = self.home / ".local/state/progress-tracker"
+        directory.mkdir(parents=True)
+
+        (directory / "update-status.json").write_text(json.dumps({
+            "stage": "completed",
+            "backup": "completed",
+            "result": "deployed",
+            "exit_code": 0,
+        }))
+
+        message = notify.build_message(SERVICE)
+
+        self.assertIn("Stage: unavailable", message)
+        self.assertNotIn("Pre-update backup: Completed", message)
+
+    def test_backup_alert_has_separate_wording(self):
+        message = notify.build_message(
+            "progress-tracker-backup.service"
+        )
+
+        self.assertIn("scheduled backup failed", message)
+        self.assertNotIn("Pre-update backup:", message)
+        self.assertNotIn("Automatic updates:", message)
+
+    def test_malformed_status_still_produces_an_alert(self):
+        directory = self.home / ".local/state/progress-tracker"
+        directory.mkdir(parents=True)
+        (directory / "update-status.json").write_text("invalid JSON")
+
+        message = notify.build_message(SERVICE)
+
+        self.assertIn("Stage: unavailable", message)
+        self.assertIn("Inspect logs:", message)
+
+
 
 if __name__ == "__main__":
     unittest.main()

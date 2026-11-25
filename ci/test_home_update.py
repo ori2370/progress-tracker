@@ -231,6 +231,35 @@ class HomeUpdateTests(unittest.TestCase):
         self.assertLess(backup, migration)
         self.assertLess(migration, startup)
 
+    def test_failed_migration_records_stage_and_preserves_original_status(self):
+        result = self.run_update("migration-failure")
+        self.assertNotEqual(result.returncode, 0)
+
+        status_file = self.state / "update-status.json"
+        recorded = json.loads(status_file.read_text())
+
+        self.assertEqual(recorded["stage"], "database_migration")
+        self.assertEqual(recorded["backup"], "completed")
+        self.assertEqual(recorded["result"], "failed")
+        self.assertEqual(recorded["exit_code"], 1)
+
+        original = status_file.read_bytes()
+        self.run_update("success")
+
+        self.assertEqual(status_file.read_bytes(), original)
+
+    def test_backup_failure_records_uncompleted_backup(self):
+        result = self.run_update("backup-failure")
+        self.assertNotEqual(result.returncode, 0)
+
+        recorded = json.loads(
+            (self.state / "update-status.json").read_text()
+        )
+
+        self.assertEqual(recorded["stage"], "backup")
+        self.assertEqual(recorded["backup"], "in_progress")
+        self.assertEqual(recorded["result"], "failed")
+        self.assertFalse((self.state / "update-blocked").exists())
 
 if __name__ == "__main__":
     unittest.main()
