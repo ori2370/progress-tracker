@@ -222,6 +222,40 @@ class GymWorkoutDetailView(OwnedGymDataMixin, DetailView):
             "exercises__sets"
         )
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        exercises = list(self.object.exercises.all())
+
+        recorded_exercises = 0
+        recorded_sets = 0
+        skipped_exercises = 0
+        visible_exercises = []
+
+        for exercise in exercises:
+            sets = list(exercise.sets.all())
+            exercise.recorded_set_count = len(sets)
+
+            if exercise.inclusion == "omitted":
+                continue
+
+            visible_exercises.append(exercise)
+            recorded_sets += len(sets)
+
+            if sets:
+                recorded_exercises += 1
+
+            if exercise.inclusion == "skipped":
+                skipped_exercises += 1
+
+        context.update({
+            "visible_exercises": visible_exercises,
+            "recorded_exercise_count": recorded_exercises,
+            "recorded_set_count": recorded_sets,
+            "skipped_exercise_count": skipped_exercises,
+        })
+
+        return context
+
 
 class GymWorkoutFromTemplateView(OwnedGymDataMixin, CreateView):
     model = GymWorkout
@@ -283,6 +317,8 @@ class GymWorkoutFromTemplateView(OwnedGymDataMixin, CreateView):
                     name=str(entry.definition),
                     tracking_mode=entry.definition.tracking_mode,
                     position=entry.position,
+                    planned_sets=entry.planned_sets,
+                    copied_from_template=True,
                 )
                 for entry in entries
             ])

@@ -176,6 +176,6 @@ class GymSetUpdateView(
 
     def get_success_url(self):
         return reverse(
-            "tracking:gym-set-create",
+            "tracking:gym-sets-log",
             kwargs={"exercise_pk": self.object.exercise_id},
         )

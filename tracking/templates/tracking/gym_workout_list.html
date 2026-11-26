@@ -5,7 +5,7 @@
 {% block content %}
     <header class="page-intro">
         <h1>Gym workouts</h1>
-        <p class="muted">Your exercises, sets, reps, and weights.</p>
+        <p class="muted">Your training history and ongoing workouts.</p>
 
         <div class="form-actions">
             <a class="button"
@@ -19,10 +19,17 @@
         </div>
     </header>
 
-    <div class="session-list">
+    <div class="workout-history-grid">
         {% for workout in workouts %}
-            <article class="card">
-                <h2>{{ workout.title }}</h2>
+            <article class="card workout-history-card">
+                <div class="workout-history-heading">
+                    <h2>{{ workout.title }}</h2>
+
+                    <span class="workout-status {% if workout.is_in_progress %}workout-status-active{% endif %}">
+                        {{ workout.get_status_display }}
+                    </span>
+                </div>
+
                 <p class="muted">
                     {{ workout.date|date:"j M Y" }}
                     {% if workout.start_time %}
@@ -30,31 +37,35 @@
                     {% endif %}
                 </p>
 
+                <div class="workout-history-duration">
+                    <span class="muted">
+                        {% if workout.is_in_progress %}
+                            Elapsed time
+                        {% else %}
+                            Duration
+                        {% endif %}
+                    </span>
+                    <strong>
+                        {% include "tracking/session_timer.html" with session=workout only %}
+                    </strong>
+                </div>
+
                 {% if workout.notes %}
-                    {{ workout.notes|linebreaks }}
+                    <p class="workout-history-notes">
+                        {{ workout.notes|truncatechars:140 }}
+                    </p>
                 {% endif %}
 
-                {% for exercise in workout.exercises.all %}
-                    <h3>{{ exercise.name }}</h3>
-
-                    {% for set in exercise.sets.all %}
-                        <p>
-                            Set {{ set.number }}:
-                            {% if set.duration_seconds != None %}
-                                {{ set.duration_display }}
-                            {% else %}
-                                {{ set.reps }} reps × {{ set.weight_kg }} kg
-                            {% endif %}
-                        </p>
-                    {% endfor %}
-                {% empty %}
-                    <p class="muted">No exercises added yet.</p>
-                {% endfor %}
-
-                <a class="button secondary"
-                   href="{% url 'tracking:gym-workout-detail' workout.pk %}">
-                    Open workout
-                </a>
+                <div class="form-actions workout-history-actions">
+                    <a class="button {% if not workout.is_in_progress %}secondary{% endif %}"
+                       href="{% url 'tracking:gym-workout-detail' workout.pk %}">
+                        {% if workout.is_in_progress %}
+                            Continue workout
+                        {% else %}
+                            View workout
+                        {% endif %}
+                    </a>
+                </div>
             </article>
         {% empty %}
             <div class="card">

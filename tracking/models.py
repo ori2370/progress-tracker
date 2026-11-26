@@ -364,6 +364,17 @@ class GymWorkout(TrackedSession):
 
 
 class GymExercise(models.Model):
+    class Inclusion(models.TextChoices):
+        INCLUDED = "included", "Included"
+        OMITTED = "omitted", "Not doing today"
+        SKIPPED = "skipped", "Skipped"
+
+    inclusion = models.CharField(
+        max_length=10,
+        choices=Inclusion.choices,
+        default=Inclusion.INCLUDED,
+    )
+    copied_from_template = models.BooleanField(default=False)
     workout = models.ForeignKey(
         GymWorkout,
         on_delete=models.CASCADE,
@@ -385,7 +396,10 @@ class GymExercise(models.Model):
     position = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1)],
     )
-
+    planned_sets = models.PositiveSmallIntegerField(
+        default=3,
+        validators=[MinValueValidator(1)],
+    )
     class Meta:
         ordering = ["position", "pk"]
         constraints = [

@@ -1,31 +1,12 @@
 {% extends "tracking/base.html" %}
+{% load static %}
 
 {% block title %}{{ workout.title }}{% endblock %}
 
 {% block content %}
     <header class="page-intro">
         <h1>{{ workout.title }}</h1>
-        <p class="muted">
-            {{ workout.get_status_display }}
-            · {% include "tracking/session_timer.html" with session=workout only %}
-        </p>
 
-        {% if not workout.is_in_progress %}
-            <p>
-                <a href="{% url 'tracking:gym-workout-times' workout.pk %}">
-                    Edit session times
-                </a>
-            </p>
-        {% endif %}
-
-        {% if workout.is_in_progress %}
-            <div class="form-actions">
-                <a class="button"
-                   href="{% url 'tracking:gym-workout-finish' workout.pk %}">
-                    Finish workout
-                </a>
-            </div>
-        {% endif %}
         <p class="muted">
             {{ workout.date|date:"j M Y" }}
             {% if workout.start_time %}
@@ -33,26 +14,41 @@
             {% endif %}
         </p>
 
-        {% if workout.notes %}
-            {{ workout.notes|linebreaks }}
-        {% endif %}
-
         <div class="form-actions">
-            <a class="button"
-                href="{% url 'tracking:gym-exercise-create' workout.pk %}">
-                Add exercise
-            </a>
+            {% if workout.is_in_progress %}
+                <a class="button"
+                   href="{% url 'tracking:gym-workout-finish' workout.pk %}">
+                    Finish workout
+                </a>
+
+                <a class="button secondary"
+                   href="{% url 'tracking:gym-exercise-create' workout.pk %}">
+                    Add exercise
+                </a>
+            {% else %}
+                <a class="button secondary"
+                   href="{% url 'tracking:gym-workout-times' workout.pk %}">
+                    Edit session times
+                </a>
+            {% endif %}
 
             <a class="button secondary"
-                href="{% url 'tracking:gym-workout-list' %}">
+               href="{% url 'tracking:gym-workout-list' %}">
                 Workout history
             </a>
 
             <details class="actions-menu">
                 <summary aria-label="Workout actions">⋮</summary>
                 <div class="actions-menu-content">
+                    {% if not workout.is_in_progress %}
+                        <a class="button secondary"
+                           href="{% url 'tracking:gym-exercise-create' workout.pk %}">
+                            Add exercise
+                        </a>
+                    {% endif %}
+
                     <a class="button danger"
-                        href="{% url 'tracking:gym-workout-delete' workout.pk %}">
+                       href="{% url 'tracking:gym-workout-delete' workout.pk %}">
                         Delete workout
                     </a>
                 </div>
@@ -60,36 +56,217 @@
         </div>
     </header>
 
-    <div class="session-list">
-        {% for exercise in workout.exercises.all %}
-            <article class="card">
-                <h2>{{ exercise.position }}. {{ exercise.name }}</h2>
+    <section class="card workout-summary"
+             aria-label="Workout summary">
+        <div class="workout-summary-heading">
+            <h2>
+                {% if workout.is_in_progress %}
+                    Workout in progress
+                {% else %}
+                    Workout completed
+                {% endif %}
+            </h2>
 
-                {% for set in exercise.sets.all %}
-                    <p>
-                        Set {{ set.number }}:
-                        {% if set.duration_seconds != None %}
-                            {{ set.duration_display }}
-                        {% else %}
-                            {{ set.reps }} reps × {{ set.weight_kg }} kg
-                        {% endif %}
-                    </p>
-                {% empty %}
-                    <p class="muted">No sets recorded yet.</p>
-                {% endfor %}
-                <a class="button"
-                   href="{% url 'tracking:gym-set-create' exercise.pk %}">
-                    {% if exercise.tracking_mode == "duration" %}
-                        Log duration
+            <span class="workout-status {% if workout.is_in_progress %}workout-status-active{% endif %}">
+                {{ workout.get_status_display }}
+            </span>
+        </div>
+
+        <dl class="workout-summary-stats">
+            <div>
+                <dt>
+                    {% if workout.is_in_progress %}
+                        Elapsed time
                     {% else %}
-                        Log sets
+                        Duration
                     {% endif %}
-                </a>
-            </article>
-        {% empty %}
-            <div class="card">
-                <p>No exercises in this workout.</p>
+                </dt>
+                <dd>
+                    {% include "tracking/session_timer.html" with session=workout only %}
+                </dd>
             </div>
-        {% endfor %}
-    </div>
+
+            <div>
+                <dt>Exercises logged</dt>
+                <dd>{{ recorded_exercise_count }}</dd>
+            </div>
+
+            <div>
+                <dt>Sets recorded</dt>
+                <dd>{{ recorded_set_count }}</dd>
+            </div>
+
+            {% if skipped_exercise_count %}
+                <div>
+                    <dt>Skipped exercises</dt>
+                    <dd>{{ skipped_exercise_count }}</dd>
+                </div>
+            {% endif %}
+        </dl>
+
+        {% if workout.notes %}
+            <details class="workout-summary-notes">
+                <summary>Workout notes</summary>
+                {{ workout.notes|linebreaks }}
+            </details>
+        {% endif %}
+    </section>
+
+    {% if workout.is_in_progress %}
+        <form id="workout-order-form"
+              method="post"
+              action="{% url 'tracking:gym-workout-order' workout.pk %}">
+            {% csrf_token %}
+        </form>
+
+        <p class="muted">
+            Hold an exercise to drag it into position.
+            Release to save automatically.
+            With a keyboard, focus an exercise and use Alt + ↑ or ↓.
+        </p>
+
+        <p id="order-status"
+           class="muted"
+           aria-live="polite"></p>
+
+        <div class="template-exercise-scroll workout-order-scroll">
+            <div class="session-list" id="workout-exercise-list">
+                {% for exercise in workout.exercises.all %}
+                    <article class="card workout-order-row"
+                             data-exercise-row
+                             tabindex="0">
+
+                        <input type="hidden"
+                               name="exercise_order"
+                               value="{{ exercise.pk }}"
+                               form="workout-order-form">
+
+                        <h2>
+                            <span data-position>{{ exercise.position }}</span>.
+                            {{ exercise.name }}
+                        </h2>
+
+                        {% if exercise.inclusion == "omitted" %}
+                            <p class="muted">
+                                Not doing today · Hidden from the completed workout.
+                            </p>
+                        {% elif exercise.inclusion == "skipped" %}
+                            <p><strong>Skipped</strong></p>
+                        {% else %}
+                            {% with sets=exercise.sets.all %}
+                                {% if sets %}
+                                    <p class="muted">
+                                        {{ sets|length }} of {{ exercise.planned_sets }} planned sets recorded
+                                    </p>
+
+                                    <details class="workout-set-details">
+                                        <summary>View recorded sets</summary>
+
+                                        <div class="recorded-set-list">
+                                            {% for set in sets %}
+                                                <div class="recorded-set-line">
+                                                    <strong>Set {{ set.number }}</strong>
+                                                    <span>
+                                                        {% if set.duration_seconds != None %}
+                                                            {{ set.duration_display }}
+                                                        {% else %}
+                                                            {{ set.reps }} reps × {{ set.weight_kg }} kg
+                                                        {% endif %}
+                                                    </span>
+                                                    <a href="{% url 'tracking:gym-set-update' set.pk %}">
+                                                        Edit
+                                                    </a>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    </details>
+                                {% else %}
+                                    <p class="muted">No sets recorded yet.</p>
+                                {% endif %}
+                            {% endwith %}
+
+                            <div class="form-actions">
+                                <a class="button"
+                                   href="{% url 'tracking:gym-sets-log' exercise.pk %}">
+                                    {% if exercise.tracking_mode == "duration" %}
+                                        Log duration
+                                    {% else %}
+                                        Log sets
+                                    {% endif %}
+                                </a>
+                            </div>
+                        {% endif %}
+
+                        {% include "tracking/workout_exercise_actions.html" %}
+                    </article>
+                {% empty %}
+                    <div class="card">
+                        <p>No exercises in this workout.</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% else %}
+        <h2>Exercises</h2>
+
+        <div class="completed-exercise-grid">
+            {% for exercise in visible_exercises %}
+                <article class="card completed-exercise-card">
+                    <h3>{{ exercise.name }}</h3>
+
+                    {% if exercise.inclusion == "skipped" %}
+                        <span class="exercise-skipped-badge">Skipped</span>
+                    {% elif exercise.recorded_set_count %}
+                        <p class="muted">
+                            {{ exercise.recorded_set_count }}
+                            set{{ exercise.recorded_set_count|pluralize }} recorded
+                        </p>
+
+                        <details class="workout-set-details">
+                            <summary>View sets and results</summary>
+
+                            <div class="recorded-set-list">
+                                {% for set in exercise.sets.all %}
+                                    <div class="recorded-set-line">
+                                        <strong>Set {{ set.number }}</strong>
+                                        <span>
+                                            {% if set.duration_seconds != None %}
+                                                {{ set.duration_display }}
+                                            {% else %}
+                                                {{ set.reps }} reps × {{ set.weight_kg }} kg
+                                            {% endif %}
+                                        </span>
+                                        <a href="{% url 'tracking:gym-set-update' set.pk %}">
+                                            Edit
+                                        </a>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </details>
+                    {% else %}
+                        <p class="muted">No sets recorded.</p>
+                    {% endif %}
+
+                    {% if exercise.inclusion == "included" %}
+                        <div class="form-actions completed-exercise-actions">
+                            <a class="button secondary"
+                               href="{% url 'tracking:gym-sets-log' exercise.pk %}">
+                                Manage sets
+                            </a>
+                        </div>
+                    {% endif %}
+                </article>
+            {% empty %}
+                <div class="card">
+                    <p>No included exercises in this workout.</p>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block scripts %}
+    {% if workout.is_in_progress %}
+        <script src="{% static 'tracking/workout_editor.js' %}" defer></script>
+    {% endif %}
 {% endblock %}
