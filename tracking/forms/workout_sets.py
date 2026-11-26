@@ -1,8 +1,7 @@
 from django import forms
 from django.forms import BaseFormSet, formset_factory
 
-from ..models import ExerciseTrackingMode
-
+from ..models import ExerciseTrackingMode, GymSet
 
 class WorkoutSetRowForm(forms.Form):
     reps = forms.IntegerField(
@@ -19,6 +18,16 @@ class WorkoutSetRowForm(forms.Form):
         widget=forms.NumberInput(
             attrs={"min": 0, "step": "0.01"}
         ),
+    )
+    weight_basis = forms.ChoiceField(
+        label="Weight basis",
+        choices=[
+            (GymSet.WeightBasis.TOTAL, "Total"),
+            (GymSet.WeightBasis.PER_SIDE, "Per side"),
+            (GymSet.WeightBasis.PER_DUMBBELL, "Per dumbbell"),
+        ],
+        initial=GymSet.WeightBasis.TOTAL,
+        required=False,
     )
     minutes = forms.IntegerField(
         min_value=0,
@@ -42,10 +51,15 @@ class WorkoutSetRowForm(forms.Form):
         if self.is_timed:
             self.fields.pop("reps")
             self.fields.pop("weight_kg")
+            self.fields.pop("weight_basis")
         else:
             self.fields.pop("minutes")
             self.fields.pop("seconds")
-
+    def has_changed(self):
+        return any(
+            name != "weight_basis"
+            for name in self.changed_data
+        )
     def clean(self):
         cleaned = super().clean()
 
@@ -70,7 +84,10 @@ class WorkoutSetRowForm(forms.Form):
         else:
             reps = cleaned.get("reps")
             weight = cleaned.get("weight_kg")
-
+            cleaned["weight_basis"] = (
+                cleaned.get("weight_basis")
+                or GymSet.WeightBasis.TOTAL
+            )
             if reps is None and weight is None:
                 return cleaned
 

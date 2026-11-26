@@ -51,7 +51,13 @@
                 {{ field.errors }}
             </div>
         {% endfor %}
-
+        {% if can_set_legacy_weight_basis %}
+            <p class="muted">
+                These sets have no recorded weight basis.
+                Apply your selected basis to all sets without changing
+                their reps or kg values.
+            </p>
+        {% endif %}
         <div class="form-actions">
             <button type="submit">
                 {% if exercise.tracking_mode == "duration" %}
@@ -60,6 +66,15 @@
                     Save set
                 {% endif %}
             </button>
+            {% if can_set_legacy_weight_basis %}
+                <button type="submit"
+                        class="button secondary"
+                        name="action"
+                        value="apply_basis"
+                        formnovalidate>
+                    Apply basis to all sets
+                </button>
+            {% endif %}
             <a class="button secondary"
                href="{% url 'tracking:gym-workout-detail' exercise.workout_id %}">
                 Back to workout
@@ -83,7 +98,7 @@
                     <p>{% if set.duration_seconds != None %}
                             {{ set.duration_display }}
                         {% else %}
-                            {{ set.reps }} reps × {{ set.weight_kg }} kg
+                            {{ set.reps }} reps × {{ set.weight_display }}
                         {% endif %}
                     </p>
 

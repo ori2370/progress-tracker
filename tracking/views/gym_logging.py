@@ -4,7 +4,7 @@ from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
 from django.views.generic import CreateView, UpdateView
-
+from .weight_basis import LegacyExerciseWeightBasisView
 from ..forms.gym import GymSetForm
 from .gym import OwnedGymDataMixin
 from ..models import GymExercise, GymSet,ExerciseTrackingMode
@@ -61,24 +61,42 @@ class ExerciseProgressMixin:
                 .first()
             )
         else:
-            personal_best = (
-                eligible_sets.filter(
-                    reps__isnull=False,
-                    weight_kg__isnull=False,
-                )
-                .order_by(
-                    "-weight_kg",
-                    "-reps",
-                    "-exercise__workout__date",
-                    "-pk",
-                )
-                .first()
+            best_by_basis = {}
+
+            ranked_sets = eligible_sets.filter(
+                reps__isnull=False,
+                weight_kg__isnull=False,
+                duration_seconds__isnull=True,
+            ).order_by(
+                "-weight_kg",
+                "-reps",
+                "-exercise__workout__date",
+                "-pk",
             )
 
+            for entry in ranked_sets:
+                best_by_basis.setdefault(entry.weight_basis, entry)
+
+            strength_bests = list(best_by_basis.values())
+
+            personal_best = (
+                strength_bests[0]
+                if len(strength_bests) == 1
+                else None
+            )
+        multiple_weight_bests = (
+            strength_bests
+            if (
+                exercise.tracking_mode == ExerciseTrackingMode.STRENGTH
+                and len(strength_bests) > 1
+            )
+            else []
+        )
         return {
             "exercise_definition": definition,
             "previous_performance": previous,
             "personal_best": personal_best,
+            "multiple_weight_bests": multiple_weight_bests,
         }
 
 
@@ -160,16 +178,41 @@ class GymSetUpdateView(
             "exercise__workout",
             "exercise__definition",
         )
+
+    def post(self, request, *args, **kwargs):
+        if request.POST.get("action") == "apply_basis":
+            entry = self.get_object()
+
+            return LegacyExerciseWeightBasisView.as_view()(
+                request,
+                exercise_pk=entry.exercise_id,
+            )
+
+        return super().post(request, *args, **kwargs)
+
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs["exercise"] = self.object.exercise
         return kwargs
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         exercise = self.object.exercise
+        recorded = list(exercise.sets.all())
 
         context["exercise"] = exercise
-        context["recorded_sets"] = exercise.sets.all()
+        context["recorded_sets"] = recorded
+        context["can_set_legacy_weight_basis"] = (
+            not exercise.workout.is_in_progress
+            and bool(recorded)
+            and all(
+                entry.weight_basis == ""
+                and entry.weight_kg is not None
+                and entry.reps is not None
+                and entry.duration_seconds is None
+                for entry in recorded
+            )
+        )
         context.update(self.get_progress_context(exercise))
 
         return context

@@ -177,10 +177,11 @@ class GymSetForm(forms.ModelForm):
 
     class Meta:
         model = GymSet
-        fields = ["reps", "weight_kg"]
+        fields = ["reps", "weight_kg", "weight_basis"]
         labels = {
             "reps": "Reps",
             "weight_kg": "Weight (kg)",
+            "weight_basis": "Weight basis",
         }
         help_texts = {
             "weight_kg": "Use 0 for bodyweight only.",
@@ -202,7 +203,7 @@ class GymSetForm(forms.ModelForm):
         if self.is_timed:
             self.fields.pop("reps")
             self.fields.pop("weight_kg")
-
+            self.fields.pop("weight_basis")
             if not self.is_bound and self.instance.duration_seconds:
                 minutes, seconds = divmod(
                     self.instance.duration_seconds,
@@ -222,7 +223,7 @@ class GymSetForm(forms.ModelForm):
         if self.is_timed:
             self.instance.reps = None
             self.instance.weight_kg = None
-
+            self.instance.weight_basis = ""
             if "minutes" in self.errors or "seconds" in self.errors:
                 return cleaned_data
 

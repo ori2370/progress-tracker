@@ -36,7 +36,7 @@
                     {% if set.duration_seconds != None %}
                         {{ set.duration_display }}
                     {% else %}
-                        {{ set.reps }} reps × {{ set.weight_kg }} kg
+                        {{ set.reps }} reps × {{ set.weight_display }}
                     {% endif %}
                 </p>
             {% endfor %}
@@ -45,17 +45,28 @@
         {% endif %}
     </article>
 
-        <article class="card">
+    <article class="card">
         <h2>Personal best</h2>
 
-        {% if personal_best %}
+        {% if multiple_weight_bests %}
+            {% for best in multiple_weight_bests %}
+                <p>
+                    <strong>
+                        {{ best.reps }} reps × {{ best.weight_display }}
+                    </strong>
+                </p>
+            {% endfor %}
+
+            <p class="muted">
+                Different weight bases are compared separately.
+            </p>
+        {% elif personal_best %}
             <p>
                 <strong>
                     {% if personal_best.duration_seconds != None %}
                         {{ personal_best.duration_display }}
                     {% else %}
-                        {{ personal_best.weight_kg }} kg
-                        × {{ personal_best.reps }} reps
+                        {{ personal_best.reps }} reps × {{ personal_best.weight_display }}
                     {% endif %}
                 </strong>
             </p>
@@ -65,11 +76,14 @@
                 {% if personal_best.duration_seconds != None %}
                     · Longest logged duration.
                 {% else %}
-                    · Heaviest logged set; ties use the higher rep count.
+                    · Heaviest logged set within this weight basis;
+                    ties use the higher rep count.
                 {% endif %}
             </p>
         {% else %}
-            <p class="muted">Record your first set to establish a best.</p>
+            <p class="muted">
+                Record your first set to establish a best.
+            </p>
         {% endif %}
     </article>
 

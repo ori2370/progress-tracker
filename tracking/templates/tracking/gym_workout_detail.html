@@ -170,7 +170,7 @@
                                                         {% if set.duration_seconds != None %}
                                                             {{ set.duration_display }}
                                                         {% else %}
-                                                            {{ set.reps }} reps × {{ set.weight_kg }} kg
+                                                            {{ set.reps }} reps × {{ set.weight_display }}
                                                         {% endif %}
                                                     </span>
                                                     <a href="{% url 'tracking:gym-set-update' set.pk %}">
@@ -196,7 +196,9 @@
                                 </a>
                             </div>
                         {% endif %}
-
+                        {% if exercise.notes %}
+                            <p class="exercise-note-text">{{ exercise.notes }}</p>
+                        {% endif %}
                         {% include "tracking/workout_exercise_actions.html" %}
                     </article>
                 {% empty %}
@@ -213,7 +215,9 @@
             {% for exercise in visible_exercises %}
                 <article class="card completed-exercise-card">
                     <h3>{{ exercise.name }}</h3>
-
+                    {% if exercise.notes %}
+                        <p class="exercise-note-text">{{ exercise.notes }}</p>
+                    {% endif %}
                     {% if exercise.inclusion == "skipped" %}
                         <span class="exercise-skipped-badge">Skipped</span>
                     {% elif exercise.recorded_set_count %}
@@ -233,7 +237,7 @@
                                             {% if set.duration_seconds != None %}
                                                 {{ set.duration_display }}
                                             {% else %}
-                                                {{ set.reps }} reps × {{ set.weight_kg }} kg
+                                                {{ set.reps }} reps × {{ set.weight_display }}
                                             {% endif %}
                                         </span>
                                         <a href="{% url 'tracking:gym-set-update' set.pk %}">
@@ -247,14 +251,16 @@
                         <p class="muted">No sets recorded.</p>
                     {% endif %}
 
-                    {% if exercise.inclusion == "included" %}
-                        <div class="form-actions completed-exercise-actions">
-                            <a class="button secondary"
-                               href="{% url 'tracking:gym-sets-log' exercise.pk %}">
+                    <div class="form-actions completed-exercise-actions">
+                        <a class="button secondary"
+                           href="{% url 'tracking:gym-sets-log' exercise.pk %}">
+                            {% if exercise.inclusion == "skipped" %}
+                                Exercise options
+                            {% else %}
                                 Manage sets
-                            </a>
-                        </div>
-                    {% endif %}
+                            {% endif %}
+                        </a>
+                    </div>
                 </article>
             {% empty %}
                 <div class="card">

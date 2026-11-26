@@ -375,6 +375,7 @@ class GymExercise(models.Model):
         default=Inclusion.INCLUDED,
     )
     copied_from_template = models.BooleanField(default=False)
+    notes = models.TextField(blank=True)
     workout = models.ForeignKey(
         GymWorkout,
         on_delete=models.CASCADE,
@@ -427,6 +428,18 @@ class GymExercise(models.Model):
 
 
 class GymSet(models.Model):
+    class WeightBasis(models.TextChoices):
+        UNSPECIFIED = "", "Not specified"
+        TOTAL = "total", "Total"
+        PER_SIDE = "per_side", "Per side"
+        PER_DUMBBELL = "dumbbell", "Per dumbbell"
+
+    weight_basis = models.CharField(
+        max_length=10,
+        choices=WeightBasis.choices,
+        blank=True,
+        default=WeightBasis.UNSPECIFIED,
+    )
     exercise = models.ForeignKey(
         GymExercise,
         on_delete=models.CASCADE,
@@ -542,7 +555,22 @@ class GymSet(models.Model):
         if minutes:
             return f"{minutes} min"
         return f"{seconds} sec"
+    @property
+    def weight_display(self):
+        if self.weight_kg is None:
+            return ""
 
+        labels = {
+            self.WeightBasis.TOTAL: "total",
+            self.WeightBasis.PER_SIDE: "per side",
+            self.WeightBasis.PER_DUMBBELL: "per dumbbell",
+        }
+        label = labels.get(
+            self.weight_basis,
+            "basis not recorded",
+        )
+
+        return f"{self.weight_kg} kg ({label})"
     def __str__(self):
         if self.duration_seconds is not None:
             return f"Set {self.number}: {self.duration_display}"
