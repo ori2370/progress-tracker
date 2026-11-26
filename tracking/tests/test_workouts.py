@@ -213,14 +213,27 @@ class GymWorkoutTests(TestCase):
             self.assertRedirects(response, url)
 
         sets = list(self.exercise.sets.all())
-        self.assertEqual([entry.number for entry in sets], [1, 2])
+        self.assertEqual(
+            [entry.number for entry in sets],
+            [1, 2],
+        )
 
         response = self.client.post(
-            reverse("tracking:gym-set-update", args=[sets[1].pk]),
+            reverse(
+                "tracking:gym-set-update",
+                args=[sets[1].pk],
+            ),
             {"reps": 9, "weight_kg": "75.00"},
         )
 
-        self.assertRedirects(response, url)
+        self.assertRedirects(
+            response,
+            reverse(
+                "tracking:gym-sets-log",
+                args=[self.exercise.pk],
+            ),
+        )
+
         sets[1].refresh_from_db()
         self.assertEqual(sets[1].reps, 9)
         self.assertEqual(sets[1].number, 2)

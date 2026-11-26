@@ -1,0 +1,162 @@
+{% extends "tracking/base.html" %}
+{% load static l10n %}
+
+{% block title %}Log sets | {{ exercise.name }}{% endblock %}
+
+{% block content %}
+    <header class="page-intro">
+        <h1>{{ exercise.name }}</h1>
+        <p class="muted">{{ exercise.workout.title }}</p>
+
+        <a class="button"
+           href="{% url 'tracking:gym-workout-detail' exercise.workout_id %}">
+            Back to workout
+        </a>
+    </header>
+
+    {% if not recorded_sets %}
+        <form method="post" class="card">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="plan">
+
+            <div class="form-field">
+                {{ plan_form.planned_sets.label_tag }}
+                {{ plan_form.planned_sets }}
+                {{ plan_form.planned_sets.errors }}
+            </div>
+
+            <button type="submit">Set planned sets</button>
+            <p class="muted">
+                This changes the goal for this workout only.
+                Choose it before filling the rows below.
+            </p>
+        </form>
+    {% endif %}
+
+    {% if recorded_sets %}
+        <section class="card" aria-labelledby="recorded-sets-heading">
+            <h2 id="recorded-sets-heading">
+                {% if goal_reached %}
+                    ✓ All {{ exercise.planned_sets }} planned sets recorded
+                {% else %}
+                    {{ recorded_count }} of {{ exercise.planned_sets }} sets recorded
+                {% endif %}
+            </h2>
+
+            <div class="recorded-set-list">
+                {% for set in recorded_sets %}
+                    <div class="recorded-set-line">
+                        <strong>Set {{ set.number }}</strong>
+
+                        <span>
+                            {% if set.duration_seconds != None %}
+                                {{ set.duration_display }}
+                            {% else %}
+                                {{ set.reps }} reps × {{ set.weight_kg }} kg
+                            {% endif %}
+                        </span>
+
+                        <a href="{% url 'tracking:gym-set-update' set.pk %}">
+                            Edit
+                        </a>
+                    </div>
+                {% endfor %}
+            </div>
+
+            {% if goal_reached and not extra_requested %}
+                <div class="form-actions">
+                    <a class="button secondary" href="?extra=1">
+                        Add another set
+                    </a>
+                </div>
+            {% endif %}
+        </section>
+    {% endif %}
+
+    {% if set_rows %}
+        <form method="post" id="workout-sets-editor">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="save">
+
+            {% if extra_requested %}
+                <input type="hidden" name="extra" value="1">
+            {% endif %}
+
+            {{ formset.management_form }}
+            {{ formset.non_form_errors }}
+
+            {% if editor_error %}
+                <p role="alert">{{ editor_error }}</p>
+            {% endif %}
+
+            {% if extra_requested %}
+                <h2>Additional set</h2>
+            {% else %}
+                <h2>Remaining sets</h2>
+            {% endif %}
+
+            <p class="muted">
+                Fill only the sets you have performed.
+                Empty rows are not recorded.
+            </p>
+
+            {% if last_recorded_set %}
+                <div id="last-recorded-set"
+                     hidden
+                     data-reps="{{ last_recorded_set.reps|default_if_none:''|unlocalize }}"
+                     data-weight="{{ last_recorded_set.weight_kg|default_if_none:''|unlocalize }}"
+                     data-duration="{{ last_recorded_set.duration_seconds|default_if_none:''|unlocalize }}">
+                </div>
+            {% endif %}
+
+            <div class="session-list">
+                {% for row in set_rows %}
+                    <fieldset class="card workout-set-row">
+                        <legend>Set {{ row.number }}</legend>
+
+                        {{ row.form.non_field_errors }}
+
+                        <div class="workout-set-fields">
+                            {% for field in row.form %}
+                                <div class="form-field">
+                                    <label for="{{ field.id_for_label }}">
+                                        {{ field.label }}
+                                    </label>
+                                    {{ field }}
+                                    {{ field.errors }}
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        {% if not forloop.first or last_recorded_set %}
+                            <button type="button"
+                                    class="button secondary"
+                                    data-copy-previous>
+                                Fill from previous set
+                            </button>
+                        {% endif %}
+
+                        <p class="muted"
+                           data-copy-feedback
+                           aria-live="polite"></p>
+                    </fieldset>
+                {% endfor %}
+            </div>
+
+            <div class="form-actions">
+                <button type="submit">Save filled sets</button>
+
+                {% if extra_requested %}
+                    <a class="button secondary"
+                       href="{% url 'tracking:gym-sets-log' exercise.pk %}">
+                        Cancel additional set
+                    </a>
+                {% endif %}
+            </div>
+        </form>
+    {% endif %}
+{% endblock %}
+
+{% block scripts %}
+    <script src="{% static 'tracking/workout_sets.js' %}" defer></script>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% if workout.is_in_progress and exercise.copied_from_template %}
+    {% if not exercise.sets.all %}
+        <form method="post"
+              action="{% url 'tracking:gym-exercise-inclusion' exercise.pk %}">
+            {% csrf_token %}
+
+            <div class="form-actions">
+                {% if exercise.inclusion == "included" %}
+                    <button type="submit"
+                            class="button secondary"
+                            name="inclusion"
+                            value="omitted">
+                        Not doing today
+                    </button>
+
+                    <button type="submit"
+                            class="button secondary"
+                            name="inclusion"
+                            value="skipped">
+                        Skip exercise
+                    </button>
+                {% else %}
+                    <button type="submit"
+                            class="button secondary"
+                            name="inclusion"
+                            value="included">
+                        Restore exercise
+                    </button>
+                {% endif %}
+            </div>
+        </form>
+    {% endif %}
+{% endif %}

@@ -1,6 +1,11 @@
 from django.urls import path
 from .views.videos import ExerciseVideoSearchView
 from .views.catalog import ExerciseCatalogListView
+from .views.workout_sets import WorkoutSetsView
+from .views.workout_exercises import (
+    WorkoutExerciseInclusionView,
+    WorkoutExerciseOrderView,
+)
 from .views.routines import (
     WorkoutRoutineCreateView,
     WorkoutRoutineListView,
@@ -124,6 +129,11 @@ urlpatterns = [
         name="gym-workout-detail",
     ),
     path(
+        "workout-exercises/<int:exercise_pk>/sets/log/",
+        WorkoutSetsView.as_view(),
+        name="gym-sets-log",
+    ),
+    path(
         "workout-exercises/<int:exercise_pk>/sets/new/",
         GymSetCreateView.as_view(),
         name="gym-set-create",
@@ -152,5 +162,15 @@ urlpatterns = [
         "exercises/<int:pk>/videos/search/",
         ExerciseVideoSearchView.as_view(),
         name="exercise-video-search",
+    ),
+        path(
+        "workout-exercises/<int:exercise_pk>/inclusion/",
+        WorkoutExerciseInclusionView.as_view(),
+        name="gym-exercise-inclusion",
+    ),
+        path(
+        "workouts/<int:workout_pk>/order/",
+        WorkoutExerciseOrderView.as_view(),
+        name="gym-workout-order",
     ),
 ]
