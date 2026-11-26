@@ -1,0 +1,29 @@
+{% extends "tracking/base.html" %}
+
+{% block title %}Exercise note{% endblock %}
+
+{% block content %}
+    <header class="page-intro">
+        <h1>{{ exercise.name }}</h1>
+        <p class="muted">Note for this workout.</p>
+    </header>
+
+    <form method="post" class="card session-form">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        <div class="form-field">
+            {{ form.notes.label_tag }}
+            {{ form.notes }}
+            {{ form.notes.errors }}
+        </div>
+
+        <div class="form-actions">
+            <button type="submit">Save note</button>
+            <a class="button secondary"
+               href="{% url 'tracking:gym-sets-log' exercise.pk %}">
+                Cancel
+            </a>
+        </div>
+    </form>
+{% endblock %}

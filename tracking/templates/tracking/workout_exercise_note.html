@@ -1,0 +1,30 @@
+<div class="exercise-note">
+    {% if exercise.notes %}
+        <p class="exercise-note-text">{{ exercise.notes }}</p>
+    {% endif %}
+
+    <details>
+        <summary>
+            {% if exercise.notes %}Edit note{% else %}Add note{% endif %}
+        </summary>
+
+        <form method="post"
+              action="{% url 'tracking:gym-exercise-note' exercise.pk %}"
+              class="exercise-note-form">
+            {% csrf_token %}
+
+            <label class="exercise-note-label"
+                   for="exercise-note-{{ exercise.pk }}">
+                Note for this workout
+            </label>
+
+            <textarea id="exercise-note-{{ exercise.pk }}"
+                      name="notes"
+                      rows="3"
+                      maxlength="2000"
+                      placeholder="Warm-up, seat setting, technique reminder…">{{ exercise.notes }}</textarea>
+
+            <button type="submit">Save note</button>
+        </form>
+    </details>
+</div>

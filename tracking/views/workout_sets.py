@@ -5,7 +5,7 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.views import View
-
+from ..services.weight_suggestions import previous_weight_sets
 from ..forms.workout_sets import WorkoutSetFormSet
 from ..models import GymExercise, GymSet
 from .gym import OwnedGymDataMixin
@@ -80,6 +80,17 @@ class WorkoutSetsView(
     def render_editor(self, formset, plan_form=None, error=None):
         exercise = self.get_exercise()
         recorded = list(exercise.sets.all())
+        can_set_legacy_weight_basis = (
+            not exercise.workout.is_in_progress
+            and bool(recorded)
+            and all(
+                entry.weight_basis == ""
+                and entry.weight_kg is not None
+                and entry.reps is not None
+                and entry.duration_seconds is None
+                for entry in recorded
+            )
+        )
         last_number = max(
             (entry.number for entry in recorded),
             default=0,
@@ -105,6 +116,7 @@ class WorkoutSetsView(
             "goal_reached": len(recorded) >= exercise.planned_sets,
             "extra_requested": source.get("extra") == "1",
             "last_recorded_set": recorded[-1] if recorded else None,
+            "can_set_legacy_weight_basis": can_set_legacy_weight_basis,
             "set_rows": [
                 {
                     "form": form,
@@ -114,7 +126,16 @@ class WorkoutSetsView(
             ],
         }
         context.update(self.get_progress_context(exercise))
+        previous_sets = previous_weight_sets(exercise)
+        previous_by_number = {
+            entry.number: entry
+            for entry in previous_sets
+        }
 
+        for row in context["set_rows"]:
+            row["weight_suggestion"] = previous_by_number.get(
+                row["number"]
+            )
         return render(self.request, self.template_name, context)
 
     def get(self, request, *args, **kwargs):
@@ -182,6 +203,7 @@ class WorkoutSetsView(
                     number=last_number,
                     reps=data.get("reps"),
                     weight_kg=data.get("weight_kg"),
+                    weight_basis=data.get("weight_basis", ""),
                     duration_seconds=data.get("duration_seconds"),
                 )
                 entry.full_clean()

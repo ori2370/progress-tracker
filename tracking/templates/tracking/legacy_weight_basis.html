@@ -1,0 +1,28 @@
+{% if can_set_legacy_weight_basis %}
+    <details class="exercise-note">
+        <summary>Set weight basis for all sets</summary>
+
+        <form method="post"
+              class="exercise-note-form"
+              action="{% url 'tracking:gym-exercise-weight-basis' exercise.pk %}">
+            {% csrf_token %}
+
+            <label for="legacy-weight-basis">
+                These weights were recorded as
+            </label>
+
+            <select id="legacy-weight-basis" name="weight_basis">
+                <option value="total">Total</option>
+                <option value="per_side">Per side</option>
+                <option value="dumbbell">Per dumbbell</option>
+            </select>
+
+            <p class="muted">
+                Applies to all {{ recorded_count }} sets.
+                Recorded kg values stay the same.
+            </p>
+
+            <button type="submit">Apply to all sets</button>
+        </form>
+    </details>
+{% endif %}

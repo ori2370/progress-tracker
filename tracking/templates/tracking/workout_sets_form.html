@@ -13,7 +13,15 @@
             Back to workout
         </a>
     </header>
-
+    {% if exercise_definition %}
+        <details class="exercise-note">
+            <summary>Exercise history and progress</summary>
+            {% include "tracking/exercise_progress.html" %}
+        </details>
+    {% endif %}
+    {% include "tracking/workout_exercise_note.html" %}
+    {% include "tracking/completed_exercise_options.html" %}
+    {% include "tracking/legacy_weight_basis.html" %}
     {% if not recorded_sets %}
         <form method="post" class="card">
             {% csrf_token %}
@@ -52,7 +60,7 @@
                             {% if set.duration_seconds != None %}
                                 {{ set.duration_display }}
                             {% else %}
-                                {{ set.reps }} reps × {{ set.weight_kg }} kg
+                                {{ set.reps }} reps × {{ set.weight_display }}
                             {% endif %}
                         </span>
 
@@ -105,6 +113,7 @@
                      hidden
                      data-reps="{{ last_recorded_set.reps|default_if_none:''|unlocalize }}"
                      data-weight="{{ last_recorded_set.weight_kg|default_if_none:''|unlocalize }}"
+                     data-basis="{{ last_recorded_set.weight_basis }}"
                      data-duration="{{ last_recorded_set.duration_seconds|default_if_none:''|unlocalize }}">
                 </div>
             {% endif %}
@@ -124,6 +133,16 @@
                                     </label>
                                     {{ field }}
                                     {{ field.errors }}
+                                    {% if field.name == "weight_kg" and row.weight_suggestion %}
+                                        <button type="button"
+                                                class="weight-suggestion"
+                                                data-weight-suggestion
+                                                data-weight="{{ row.weight_suggestion.weight_kg|unlocalize }}"
+                                                data-basis="{{ row.weight_suggestion.weight_basis }}">
+                                            Use previous:
+                                            {{ row.weight_suggestion.weight_display }}
+                                        </button>
+                                    {% endif %}
                                 </div>
                             {% endfor %}
                         </div>

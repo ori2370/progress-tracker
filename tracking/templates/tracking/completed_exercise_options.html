@@ -1,0 +1,39 @@
+{% if not exercise.workout.is_in_progress and not recorded_sets %}
+    <details class="exercise-note">
+        <summary>Exercise options</summary>
+
+        <form method="post"
+              action="{% url 'tracking:gym-completed-exercise-inclusion' exercise.pk %}">
+            {% csrf_token %}
+
+            <p class="muted">
+                No sets recorded for this exercise.
+            </p>
+
+            <div class="form-actions">
+                {% if exercise.inclusion == "included" %}
+                    <button type="submit"
+                            class="button secondary"
+                            name="inclusion"
+                            value="omitted">
+                        Not doing today
+                    </button>
+
+                    <button type="submit"
+                            class="button secondary"
+                            name="inclusion"
+                            value="skipped">
+                        Skip exercise
+                    </button>
+                {% else %}
+                    <button type="submit"
+                            class="button secondary"
+                            name="inclusion"
+                            value="included">
+                        Restore exercise
+                    </button>
+                {% endif %}
+            </div>
+        </form>
+    </details>
+{% endif %}
