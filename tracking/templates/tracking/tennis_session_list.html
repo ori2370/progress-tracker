@@ -108,7 +108,25 @@
                     </label>
 
                     <h2>{{ session.focus }}</h2>
+                    <p class="muted">
+                        {{ session.get_status_display }}
+                        · {% include "tracking/session_timer.html" with session=session only %}
+                    </p>
 
+                    {% if not session.is_in_progress %}
+                        <p>
+                            <a href="{% url 'tracking:tennis-times' session.pk %}">
+                                Edit session times
+                            </a>
+                        </p>
+                    {% endif %}
+
+                    {% if session.is_in_progress %}
+                        <a class="button"
+                           href="{% url 'tracking:tennis-finish' session.pk %}">
+                            Finish session
+                        </a>
+                    {% endif %}
                     <p class="muted">
                         {{ session.date }}
                         {% if session.start_time %}
@@ -126,6 +144,13 @@
                     {% endif %}
 
                     {% if session.session_type == "match" %}
+                        {% if not session.is_in_progress %}
+                            <p>
+                                <a href="{% url 'tracking:tennis-result-update' session.pk %}">
+                                    Edit result and scores
+                                </a>
+                            </p>
+                        {% endif %}
                         <h3>Result</h3>
                         <p>
                             {{ session.get_match_result_display|default:"Not recorded" }}

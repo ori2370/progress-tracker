@@ -3,7 +3,7 @@ from django.utils import timezone
 import re
 from urllib.parse import parse_qs, urlsplit
 from ..models import BodyMeasurement, GymWorkout,ExerciseDefinition,GymSet,GymExercise,ExerciseTrackingMode
-
+from .session_timing import SessionTimingFormMixin
 class BodyMeasurementForm(forms.ModelForm):
     class Meta:
         model = BodyMeasurement
@@ -28,7 +28,7 @@ class BodyMeasurementForm(forms.ModelForm):
         if not self.is_bound and not self.instance.pk:
             self.initial.setdefault("date", timezone.localdate())
 
-class GymWorkoutForm(forms.ModelForm):
+class GymWorkoutForm(SessionTimingFormMixin, forms.ModelForm):
     class Meta:
         model = GymWorkout
         fields = ["date", "start_time", "title", "notes"]
@@ -273,6 +273,9 @@ class GymExerciseForm(forms.ModelForm):
         self.instance.workout = workout
 
         self.fields["definition"].required = False
+        self.fields["definition"].empty_label = (
+            "New exercise / activity"
+        )
         self.fields["definition"].queryset = (
             ExerciseDefinition.objects.filter(user=user)
         )

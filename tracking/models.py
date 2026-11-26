@@ -3,6 +3,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from decimal import Decimal
+from django.utils import timezone
 
 class TennisFocus(models.Model):
     user = models.ForeignKey(
@@ -55,8 +56,95 @@ class TennisFocus(models.Model):
     def __str__(self):
         return self.title
 
+class TrackedSession(models.Model):
+    class Status(models.TextChoices):
+        IN_PROGRESS = "in_progress", "In progress"
+        COMPLETED = "completed", "Completed"
 
-class TennisSession(models.Model):
+    status = models.CharField(
+        max_length=15,
+        choices=Status.choices,
+        default=Status.COMPLETED,
+    )
+    started_at = models.DateTimeField(
+        blank=True,
+        null=True,
+    )
+    finished_at = models.DateTimeField(
+        blank=True,
+        null=True,
+    )
+
+    class Meta:
+        abstract = True
+        constraints = [
+            models.CheckConstraint(
+                condition=(
+                    models.Q(status="completed")
+                    | models.Q(
+                        status="in_progress",
+                        started_at__isnull=False,
+                        finished_at__isnull=True,
+                    )
+                ),
+                name="%(app_label)s_%(class)s_valid_status",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(finished_at__isnull=True)
+                    | models.Q(started_at__isnull=False)
+                ),
+                name="%(app_label)s_%(class)s_finish_requires_start",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(finished_at__isnull=True)
+                    | models.Q(
+                        finished_at__gte=models.F("started_at")
+                    )
+                ),
+                name="%(app_label)s_%(class)s_valid_time_order",
+            ),
+        ]
+
+    @property
+    def is_in_progress(self):
+        return self.status == self.Status.IN_PROGRESS
+
+    @property
+    def elapsed_seconds(self):
+        if self.started_at is None:
+            return None
+
+        if self.is_in_progress:
+            end = timezone.now()
+        else:
+            end = self.finished_at
+
+        if end is None:
+            return None
+
+        return max(
+            0,
+            int((end - self.started_at).total_seconds()),
+        )
+
+    @property
+    def duration_display(self):
+        seconds = self.elapsed_seconds
+
+        if seconds is None:
+            return "Duration not recorded"
+
+        hours, remainder = divmod(seconds, 3600)
+        minutes, seconds = divmod(remainder, 60)
+
+        if hours:
+            return f"{hours} hr {minutes} min"
+
+        return f"{minutes} min {seconds} sec"
+
+class TennisSession(TrackedSession):
     class SessionType(models.TextChoices):
         LESSON = "lesson", "Group lesson"
         PRACTICE = "practice", "Practice"
@@ -105,7 +193,7 @@ class TennisSession(models.Model):
 
     class Meta:
         ordering = ["-date", "-start_time", "-created_at"]
-
+        constraints = TrackedSession.Meta.constraints
     def clean(self):
         super().clean()
 
@@ -249,7 +337,7 @@ class ExerciseDefinition(models.Model):
             return f"{self.name} — {self.equipment}"
         return self.name
 
-class GymWorkout(models.Model):
+class GymWorkout(TrackedSession):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -270,7 +358,7 @@ class GymWorkout(models.Model):
 
     class Meta:
         ordering = ["-date", "-start_time", "-created_at"]
-
+        constraints = TrackedSession.Meta.constraints
     def __str__(self):
         return f"{self.title} — {self.date}"
 

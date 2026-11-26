@@ -10,6 +10,45 @@
         <p class="muted">What would you like to track today?</p>
     </header>
 
+    <section class="card monthly-progress"
+             aria-labelledby="monthly-progress-heading">
+        <h2 id="monthly-progress-heading">
+            Your progress · {{ progress_month|date:"F Y" }}
+        </h2>
+
+        <p class="muted">
+            Completed sessions this month. Sessions in progress
+            are counted once finished.
+        </p>
+
+        <dl class="progress-counts">
+            <div>
+                <dt>
+                    <a class="progress-card-link"
+                       href="{% url 'tracking:gym-workout-list' %}">
+                        Gym workouts
+                    </a>
+                </dt>
+                <dd>{{ gym_completed_count }}</dd>
+            </div>
+
+            <div>
+                <dt>
+                    <a class="progress-card-link"
+                       href="{% url 'tracking:tennis-list' %}">
+                        Tennis sessions
+                    </a>
+                </dt>
+                <dd>{{ tennis_completed_count }}</dd>
+            </div>
+
+            <div>
+                <dt>Total completed</dt>
+                <dd>{{ total_completed_count }}</dd>
+            </div>
+        </dl>
+    </section>
+    {% include "tracking/measurement_summary.html" %}
     <div class="session-list">
         <article class="card">
             <h2>Gym</h2>

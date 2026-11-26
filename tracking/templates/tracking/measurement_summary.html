@@ -1,0 +1,54 @@
+<section class="card measurement-summary"
+         aria-label="Latest body measurements">
+    <h2>
+        <a class="measurement-summary-heading"
+           href="{% url 'tracking:measurement-list' %}">
+            Body measurements
+        </a>
+    </h2>
+
+    <dl class="measurement-summary-values">
+        <div>
+            <dt>Latest weight</dt>
+            <dd>
+                {% if latest_weight %}
+                    <strong>
+                        {{ latest_weight.weight_kg|floatformat:2 }} kg
+                    </strong>
+                    <span class="muted">
+                        {{ latest_weight.date|date:"j M Y" }}
+                    </span>
+                {% else %}
+                    <span class="muted">Not recorded yet</span>
+                {% endif %}
+            </dd>
+        </div>
+
+        <div>
+            <dt>Latest waist</dt>
+            <dd>
+                {% if latest_waist %}
+                    <strong>
+                        {{ latest_waist.waist_cm|floatformat:2 }} cm
+                    </strong>
+                    <span class="muted">
+                        {{ latest_waist.date|date:"j M Y" }}
+                    </span>
+                {% else %}
+                    <span class="muted">Not recorded yet</span>
+                {% endif %}
+            </dd>
+        </div>
+    </dl>
+
+    <div class="form-actions">
+        <a class="button"
+           href="{% url 'tracking:measurement-create' %}">
+            Add measurement
+        </a>
+        <a class="button secondary"
+           href="{% url 'tracking:measurement-list' %}">
+            View history
+        </a>
+    </div>
+</section>

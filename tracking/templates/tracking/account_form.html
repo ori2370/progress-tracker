@@ -58,4 +58,7 @@
             {% endif %}
         </div>
     </form>
+    {% if request.resolver_match.url_name == "profile" %}
+        {% include "tracking/measurement_summary.html" %}
+    {% endif %}
 {% endblock %}

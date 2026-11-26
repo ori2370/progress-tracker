@@ -1,9 +1,9 @@
 from django import forms
 from django.forms import BaseFormSet, formset_factory
-
+from .session_timing import SessionTimingFormMixin
 from ..models import TennisFocus, TennisSession
 
-class TennisSessionForm(forms.ModelForm):
+class TennisSessionForm(SessionTimingFormMixin, forms.ModelForm):
     set_count = forms.TypedChoiceField(
         label="Number of sets to record",
         choices=[
@@ -58,6 +58,26 @@ class TennisSessionForm(forms.ModelForm):
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self.fields["session_type"].choices = (
+            TennisSession.SessionType.choices
+        )
+        self.fields["match_result"].choices = (
+            TennisSession.MatchResult.choices
+        )
+
+        if not self.is_bound and not self.instance.pk:
+            self.initial.setdefault(
+                "session_type",
+                TennisSession.SessionType.LESSON,
+            )
+            self.initial.setdefault(
+                "match_result",
+                TennisSession.MatchResult.UNFINISHED,
+            )
+
+        self.fields["training_focus"].empty_label = (
+            "No training focus"
+        )
         self.fields["training_focus"].queryset = (
             TennisFocus.objects.none()
         )
@@ -71,9 +91,15 @@ class TennisSessionForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super().clean()
         session_type = cleaned_data.get("session_type")
+        is_live = cleaned_data.get("recording_mode") == "live"
 
         if session_type == TennisSession.SessionType.MATCH:
-            if not cleaned_data.get("match_result"):
+            if is_live:
+                cleaned_data["match_result"] = (
+                    TennisSession.MatchResult.UNFINISHED
+                )
+                cleaned_data["set_count"] = 0
+            elif not cleaned_data.get("match_result"):
                 self.add_error(
                     "match_result",
                     "Choose a result for this match.",

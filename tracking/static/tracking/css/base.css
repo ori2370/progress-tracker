@@ -469,3 +469,117 @@ a.brand {
         width: 100%;
     }
 }
+
+.form-field input[type="radio"] {
+    width: auto;
+    min-height: auto;
+    margin-right: 0.5rem;
+    accent-color: var(--accent);
+}
+.monthly-progress {
+    margin-bottom: 1.5rem;
+}
+
+.progress-counts {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+    margin: 1.25rem 0 0;
+}
+
+.progress-counts > div {
+    padding: 1rem;
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    background: var(--background);
+}
+
+.progress-counts dt {
+    color: var(--muted);
+    font-size: 0.95rem;
+}
+
+.progress-counts dd {
+    margin: 0.25rem 0 0;
+    color: var(--accent);
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+@media (max-width: 35rem) {
+    .progress-counts {
+        grid-template-columns: 1fr;
+    }
+}
+.progress-counts > div {
+    position: relative;
+}
+
+.progress-card-link {
+    color: inherit;
+    text-decoration: none;
+}
+
+.progress-card-link::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 0.75rem;
+}
+
+.progress-counts > div:has(.progress-card-link):hover {
+    background: #e3f1eb;
+    border-color: var(--accent);
+}
+
+.progress-card-link:focus-visible {
+    outline: none;
+}
+
+.progress-card-link:focus-visible::after {
+    outline: 3px solid #2563eb;
+    outline-offset: 3px;
+}
+.measurement-summary {
+    margin-block: 1.5rem;
+}
+
+.measurement-summary-heading {
+    color: var(--text);
+    text-decoration: none;
+}
+
+.measurement-summary-heading:hover {
+    text-decoration: underline;
+}
+
+.measurement-summary-values {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    margin: 1.25rem 0;
+}
+
+.measurement-summary-values dt {
+    color: var(--muted);
+}
+
+.measurement-summary-values dd {
+    margin: 0.25rem 0 0;
+}
+
+.measurement-summary-values strong {
+    display: block;
+    color: var(--accent);
+    font-size: 1.5rem;
+}
+
+.measurement-summary-values dd > span {
+    display: block;
+}
+
+@media (max-width: 35rem) {
+    .measurement-summary-values {
+        grid-template-columns: 1fr;
+    }
+}

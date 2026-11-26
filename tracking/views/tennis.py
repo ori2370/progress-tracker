@@ -75,6 +75,9 @@ class TennisSessionCreateView(LoginRequiredMixin, CreateView):
         if self.request.method != "POST":
             return 0
 
+        if self.request.POST.get("recording_mode") == "live":
+            return 0
+
         if self.request.POST.get("session_type") != "match":
             return 0
 
