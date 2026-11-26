@@ -6,7 +6,7 @@ from django.contrib.auth.views import (
 )
 from django.urls import reverse_lazy
 from django.views.generic import UpdateView
-
+from ..services.measurements import get_measurement_summary
 from ..forms.accounts import ProfileForm
 
 
@@ -37,6 +37,12 @@ class ProfileUpdateView(LoginRequiredMixin, UpdateView):
     def get_object(self, queryset=None):
         return self.request.user
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(
+            get_measurement_summary(self.request.user)
+        )
+        return context
 
 class AccountPasswordChangeView(
     LoginRequiredMixin,

@@ -6,6 +6,27 @@
     <header class="page-intro">
         <h1>{{ workout.title }}</h1>
         <p class="muted">
+            {{ workout.get_status_display }}
+            · {% include "tracking/session_timer.html" with session=workout only %}
+        </p>
+
+        {% if not workout.is_in_progress %}
+            <p>
+                <a href="{% url 'tracking:gym-workout-times' workout.pk %}">
+                    Edit session times
+                </a>
+            </p>
+        {% endif %}
+
+        {% if workout.is_in_progress %}
+            <div class="form-actions">
+                <a class="button"
+                   href="{% url 'tracking:gym-workout-finish' workout.pk %}">
+                    Finish workout
+                </a>
+            </div>
+        {% endif %}
+        <p class="muted">
             {{ workout.date|date:"j M Y" }}
             {% if workout.start_time %}
                 at {{ workout.start_time|time:"H:i" }}

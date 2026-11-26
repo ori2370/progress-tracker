@@ -124,7 +124,7 @@ class TemplateExerciseForm(forms.ModelForm):
             "definition_id",
             flat=True,
         )
-
+        self.fields["definition"].empty_label = None
         self.fields["definition"].queryset = (
             ExerciseDefinition.objects.filter(user=user)
             .exclude(pk__in=used_definitions)

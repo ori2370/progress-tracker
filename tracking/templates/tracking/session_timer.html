@@ -1,0 +1,6 @@
+<span {% if session.is_in_progress and session.started_at %}
+          data-session-timer
+          data-elapsed-seconds="{{ session.elapsed_seconds }}"
+      {% endif %}>
+    {{ session.duration_display }}
+</span>

@@ -1,0 +1,39 @@
+{% extends "tracking/base.html" %}
+
+{% block title %}Edit Session Times{% endblock %}
+
+{% block content %}
+    <header class="page-intro">
+        <h1>Edit session times</h1>
+        <p>{{ session }}</p>
+        <p class="muted">
+            Times are in Israel time. Enter the start, then either
+            a finish date and time or a duration.
+        </p>
+    </header>
+
+    <form method="post" class="card session-form">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        {% for field in form %}
+            <div class="form-field">
+                {{ field.label_tag }}
+                {{ field }}
+
+                {% if field.help_text %}
+                    <p class="muted">{{ field.help_text }}</p>
+                {% endif %}
+
+                {{ field.errors }}
+            </div>
+        {% endfor %}
+
+        <div class="form-actions">
+            <button type="submit">Save session times</button>
+            <a class="button secondary" href="{{ return_url }}">
+                Cancel
+            </a>
+        </div>
+    </form>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends "tracking/base.html" %}
+{% load static %}
+
+{% block title %}Edit Match Result{% endblock %}
+
+{% block content %}
+    <header class="page-intro">
+        <h1>Edit match result</h1>
+        <p class="muted">
+            {{ object.focus }} · {{ object.date|date:"j M Y" }}
+        </p>
+    </header>
+
+    <form method="post" class="card session-form">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        <div class="form-field">
+            {{ form.match_result.label_tag }}
+            {{ form.match_result }}
+            {{ form.match_result.errors }}
+        </div>
+
+        <div class="form-field">
+            {{ form.set_count.label_tag }}
+            {{ form.set_count }}
+            {{ form.set_count.errors }}
+        </div>
+
+        {{ set_formset.management_form }}
+        {{ set_formset.non_form_errors }}
+
+        {% for set_form in set_formset %}
+            <fieldset class="set-row" data-result-set>
+                <legend>Set {{ forloop.counter }}</legend>
+
+                {{ set_form.non_field_errors }}
+
+                {% for field in set_form %}
+                    <div class="form-field">
+                        {{ field.label_tag }}
+                        {{ field }}
+                        {{ field.errors }}
+                    </div>
+                {% endfor %}
+            </fieldset>
+        {% endfor %}
+
+        <div class="form-actions">
+            <button type="submit">Save result</button>
+            <a class="button secondary"
+               href="{% url 'tracking:tennis-list' %}">
+                Cancel
+            </a>
+        </div>
+    </form>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{% static 'tracking/tennis_result.js' %}" defer></script>
+{% endblock %}
